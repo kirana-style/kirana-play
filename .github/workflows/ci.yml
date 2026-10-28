@@ -1,7 +1,8 @@
 name: ci
 
-# What a pull request must keep true: format, lint with the Kirana rules, types, and a build with 0
-# compiler errors. Kirana comes from npm as a prebuilt platform package, so no job needs Rust.
+# What a pull request must keep true: format, lint with the Kirana rules, types, unit tests, a build
+# with 0 compiler errors, and the playground working in a browser. Kirana comes from npm as a
+# prebuilt platform package, so no job needs Rust.
 
 on:
   push:
@@ -38,14 +39,53 @@ jobs:
       - name: Lint and types
         run: vp lint --deny-warnings
 
+      - name: Unit tests
+        run: vp test run
+
       - name: Build
         run: vp run build
+
+  # The playground in Chromium, on the built Worker: the engine of the version it opens with,
+  # fetched from npm through the Worker's /engine proxy, compiles the starter, the frame renders it,
+  # a typo is a problem and a shared link opens the same project (scripts/e2e.ts).
+  e2e:
+    runs-on: ubuntu-26.04
+    name: playground in a browser
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Build
+        run: vp run build
+
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: Serve the Worker
+        run: |
+          bunx wrangler dev --port 8787 > wrangler.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:8787/ && exit 0
+            sleep 1
+          done
+          cat wrangler.log
+          exit 1
+
+      - name: The playground end to end
+        env:
+          CI: "true"
+        run: bun scripts/e2e.ts
 
   # The one check branch protection requires, so renaming a job never changes the ruleset.
   result:
     name: ci result
     if: always()
-    needs: [check]
+    needs: [check, e2e]
     runs-on: ubuntu-26.04
     timeout-minutes: 5
 
