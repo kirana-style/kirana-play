@@ -206,6 +206,7 @@ export function Footer({
       </div>
       <span
         role="status"
+        data-state={status.kind}
         title={statusText(status)}
         sx={[styles.status, status.kind === "failed" && styles.failed]}
       >

@@ -23,15 +23,17 @@ function check(what: string, ok: boolean, detail = "") {
   if (!ok) failures.push(what)
 }
 
-const compiled = (page: Page) =>
-  page.waitForFunction(
-    () =>
-      /Compiled in|did not start/.test(
-        document.querySelector('[role="status"]')?.textContent ?? ""
-      ),
-    undefined,
-    { timeout: 90_000 }
+/** Waits until the engine has compiled or failed, and returns what the status says. */
+async function settled(page: Page): Promise<{ state: string; text: string }> {
+  const status = page.locator(
+    '[role="status"][data-state="done"], [role="status"][data-state="failed"]'
   )
+  await status.waitFor({ timeout: 90_000 })
+  return {
+    state: (await status.getAttribute("data-state")) ?? "",
+    text: (await status.textContent()) ?? "",
+  }
+}
 
 const browser = await chromium.launch({
   args: process.env.CI ? ["--no-sandbox"] : [],
@@ -53,13 +55,11 @@ try {
     response?.headers()["cross-origin-embedder-policy"] === "require-corp" &&
       (await page.evaluate(() => crossOriginIsolated))
   )
-  await compiled(page)
-  const status = (await page.textContent('[role="status"]')) ?? ""
-  check(
-    "the engine compiles the starter",
-    status.startsWith("Compiled in"),
-    status
-  )
+  const status = await settled(page)
+  check("the engine compiles the starter", status.state === "done", status.text)
+  // Nothing after this can pass without an engine: stop with the reason.
+  if (status.state !== "done")
+    throw new Error(`the engine did not compile: ${status.text}`)
 
   const frame = page
     .frames()
@@ -117,7 +117,7 @@ try {
   const link = page.url()
   const second = await context.newPage()
   await second.goto(link)
-  await compiled(second)
+  await settled(second)
   const restored = await second
     .locator('[aria-label="Card.tsx source"]')
     .innerText()

@@ -88,7 +88,14 @@ export function useCompiler(
     const id = ++run.current
     const timer = setTimeout(async () => {
       try {
-        await current.ready
+        // An engine that did not start has said so already (the effect above).
+        if (
+          !(await current.ready.then(
+            () => true,
+            () => false
+          ))
+        )
+          return
         if (id !== run.current) return
         setReached({ version, status: { kind: "compiling" } })
         const source = files[CONFIG_FILE]

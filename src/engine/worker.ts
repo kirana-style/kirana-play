@@ -104,6 +104,15 @@ async function handle(request: EngineRequest): Promise<unknown> {
         `/engine/${request.version}/compiler.js`,
         location.origin
       )
+      // Asked first, so a release without a browser engine says so: a failed
+      // `import()` only says that it failed.
+      const probe = await fetch(url)
+      if (!probe.ok)
+        throw new Error(
+          probe.status === 404
+            ? `@kirana-style/compiler-browser@${request.version} is not on npm`
+            : `the engine answered ${probe.status} ${probe.statusText}`
+        )
       engine = (await import(/* @vite-ignore */ url.href)) as BrowserEngine
       return request.version
     }
