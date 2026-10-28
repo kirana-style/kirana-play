@@ -1,0 +1,63 @@
+name: ci
+
+# What a pull request must keep true: format, lint with the Kirana rules, types, and a build with 0
+# compiler errors. Kirana comes from npm as a prebuilt platform package, so no job needs Rust.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    name: check and build
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Format
+        run: vp fmt --check
+
+      # Oxlint with the Kirana rules and the type check in the same pass; a warning fails it.
+      - name: Lint and types
+        run: vp lint --deny-warnings
+
+      - name: Build
+        run: vp run build
+
+  # The one check branch protection requires, so renaming a job never changes the ruleset.
+  result:
+    name: ci result
+    if: always()
+    needs: [check]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "::error::a job ended in $result"; exit 1 ;;
+            esac
+          done

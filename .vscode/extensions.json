@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    // Linting and formatting (oxlint + oxfmt)
+    "oxc.oxc-vscode",
+
+    // Kirana: hovers, inlay summaries, diagnostics and `trace` in the editor
+    "kirana-style.kirana"
+
+    // TypeScript / React
+    // "ms-vscode.vscode-typescript-next",
+
+    // Bun runtime support
+    // "oven.bun-vscode"
+  ],
+  "unwantedRecommendations": [
+    // Replaced by oxfmt and oxlint — leaving these installed means two
+    // formatters fighting over the same files on save.
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // Styling is Kirana. The Tailwind extension would report every style object
+    // as an unknown class and offer completions for a framework that is not
+    // installed.
+    "bradlc.vscode-tailwindcss"
+  ]
+}

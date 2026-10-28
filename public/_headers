@@ -1,0 +1,5 @@
+# The engine's WASI build runs on threads, which need SharedArrayBuffer, which needs the page to be
+# cross-origin isolated. Every asset is served from this origin, so nothing else is blocked.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

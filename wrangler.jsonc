@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The playground, which the `play` Worker serves. Built by `vp build` (the Cloudflare plugin
+  // writes the Worker and its static assets) and deployed with `wrangler deploy` by
+  // .github/workflows/site.yml. Until the custom domain is added it is served at
+  // https://play.kirana-style.workers.dev.
+  "name": "play",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true,
+  },
+  // The custom domain, once the playground should answer at play.kirana.style (the kirana.style
+  // zone is on this Cloudflare account already):
+  // "routes": [{ "pattern": "play.kirana.style", "custom_domain": true }],
+}
