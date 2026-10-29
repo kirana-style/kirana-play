@@ -1,8 +1,9 @@
 import { css } from "@kirana-style/core"
 
 import type { Scheme } from "@/preview/protocol.ts"
-import { color, font } from "@/theme/tokens.ts"
+import { color } from "@/theme/tokens.ts"
 
+import { KiranaMark, Wordmark } from "./brand.tsx"
 import {
   CodeIcon,
   EyeIcon,
@@ -52,20 +53,11 @@ const styles = {
   }),
   brand: css({
     display: "flex",
-    alignItems: "baseline",
+    alignItems: "center",
     gap: "0.5rem",
     color: color.foreground,
     textDecorationLine: "none",
   }),
-  wordmark: css({
-    fontFamily: font.wordmark,
-    fontStyle: "italic",
-    fontWeight: 400,
-    fontSize: "1.625rem",
-    lineHeight: 1,
-  }),
-  slash: css({ color: color.mutedForeground, fontSize: "0.875rem" }),
-  product: css({ fontSize: "0.875rem", fontWeight: 600 }),
   /** What a narrow screen leaves out of the header: the icons say enough. */
   wide: css({
     display: { base: "none", "@media (min-width: 40rem)": "inline" },
@@ -101,12 +93,9 @@ export function Header({
 }: Props) {
   return (
     <header sx={styles.header}>
-      <a href="https://kirana.style" sx={styles.brand}>
-        <span sx={styles.wordmark}>Kirana</span>
-        <span aria-hidden="true" sx={[styles.slash, styles.wide]}>
-          /
-        </span>
-        <span sx={[styles.product, styles.wide]}>Playground</span>
+      <a href="/" aria-label="kirana playground, home" sx={styles.brand}>
+        <KiranaMark />
+        <Wordmark />
       </a>
       <div sx={styles.spacer} />
       <div role="group" aria-label="Layout" sx={styles.layouts}>
