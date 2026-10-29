@@ -18,7 +18,7 @@ writes for it, compiled in your browser by the released engine. It will answer a
 
 ```bash
 bun install
-vp dev                 # http://localhost:5173
+vp dev                 # http://localhost:3004
 vp check               # format, lint, types
 vp test                # unit tests
 vp run prepush         # check, tests, then build: what CI runs
@@ -45,7 +45,7 @@ KIRANA_ENGINE_URL=http://127.0.0.1:4555/
 page ──► engine worker ──► /engine/<version>/compiler.js (Kirana's WebAssembly engine)
   │        the project in its in-memory file system; Kirana's output, then Sucrase
   └────► preview frame (sandboxed, opaque origin)
-           evaluates kirana.config.ts, runs the modules, renders App.tsx
+           evaluates kirana.config.ts, runs the modules, renders app.tsx
 ```
 
 | Path               | What it is                                                                                   |

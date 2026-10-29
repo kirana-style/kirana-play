@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { PointerEvent } from "react"
 import { css } from "@kirana-style/core"
 
-import { Editor, languageOf } from "@/editor/Editor.tsx"
+import { Editor, languageOf } from "@/editor/editor.tsx"
 import type { Diagnostic, Position } from "@/engine/protocol.ts"
 import { DEFAULT_VERSION } from "@/engine/version.ts"
 import { connectFrame, frameDocument } from "@/preview/frame.ts"
@@ -11,13 +11,13 @@ import type { Scheme } from "@/preview/protocol.ts"
 import { color } from "@/theme/tokens.ts"
 
 import type { Example } from "./examples.ts"
-import { FileTabs } from "./FileTabs.tsx"
-import { Footer } from "./Footer.tsx"
-import { Header } from "./Header.tsx"
-import type { Layout } from "./Header.tsx"
-import { OutputPane } from "./OutputPane.tsx"
-import type { OutputTab } from "./OutputPane.tsx"
-import { Problems } from "./Problems.tsx"
+import { FileTabs } from "./file-tabs.tsx"
+import { Footer } from "./footer.tsx"
+import { Header } from "./header.tsx"
+import type { Layout } from "./header.tsx"
+import { OutputPane } from "./output-pane.tsx"
+import type { OutputTab } from "./output-pane.tsx"
+import { Problems } from "./problems.tsx"
 import {
   filesOf,
   freshName,
@@ -29,7 +29,7 @@ import {
 import type { Project } from "./project.ts"
 import { encodeShared } from "./share.ts"
 import { ui } from "./ui.ts"
-import { useCompiler } from "./useCompiler.ts"
+import { useCompiler } from "./use-compiler.ts"
 
 const SCHEME = "kirana-play:scheme"
 const LAYOUT = "kirana-play:layout"

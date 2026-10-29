@@ -3,13 +3,13 @@ import type { Ref } from "react"
 import { css } from "@kirana-style/core"
 import { gzipSync, strToU8 } from "fflate"
 
-import { Editor } from "@/editor/Editor.tsx"
+import { Editor } from "@/editor/editor.tsx"
 import { color, font } from "@/theme/tokens.ts"
 
 import { CopyIcon } from "./icons.tsx"
 import { formatBytes, layersOf } from "./stylesheet.ts"
 import { ui } from "./ui.ts"
-import type { Compiled } from "./useCompiler.ts"
+import type { Compiled } from "./use-compiler.ts"
 
 export type OutputTab = "preview" | "css" | "compiled"
 

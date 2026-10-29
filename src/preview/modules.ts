@@ -1,7 +1,7 @@
 /**
  * A small CommonJS module system for the preview: the project's modules by
  * path, the packages the frame carries by name, and relative imports resolved
- * as a bundler would (`./Card` finds `Card.tsx`).
+ * as a bundler would (`./card` finds `card.tsx`).
  */
 
 const EXTENSIONS = ["", ".tsx", ".ts", ".jsx", ".js", "/index.tsx", "/index.ts"]

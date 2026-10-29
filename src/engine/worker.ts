@@ -3,6 +3,9 @@
  * project in its in-memory file system, and compiles it on request. A new
  * version gets a new worker; an engine once started cannot be unloaded.
  */
+import type { KiranaConfig } from "@kirana-style/core/config"
+import type * as Kirana from "@kirana-style/compiler-browser"
+import type { Project } from "@kirana-style/compiler-browser"
 import { transform } from "sucrase"
 
 import { isModule } from "./protocol.ts"
@@ -13,25 +16,7 @@ import type {
   Files,
 } from "./protocol.ts"
 
-type Transformed = {
-  code?: string
-  diagnostics: Diagnostic[]
-}
-
-type Project = {
-  configJson: string
-  write: (file: string, code: string) => string[]
-  remove: (file: string) => void
-  transform: (file: string) => Transformed
-  stylesheet: (minify?: boolean) => string
-  diagnostics: () => Diagnostic[]
-  files: () => string[]
-}
-
-type BrowserEngine = {
-  createProject: (options: { config?: unknown; files?: Files }) => Project
-  configJson: (root: string, config: unknown, inline: unknown) => string
-}
+type BrowserEngine = typeof Kirana
 
 let engine: BrowserEngine | undefined
 let project: Project | undefined
@@ -48,10 +33,10 @@ function commonJs(code: string, file: string): string {
 }
 
 /** Opens a new project when the configuration changed, else writes what changed. */
-function sync(config: unknown, files: Files): Project {
-  const json = engine!.configJson("/app", config ?? {}, {})
+function sync(config: KiranaConfig, files: Files): Project {
+  const json = engine!.configJson("/app", config, {})
   if (project?.configJson !== json) {
-    project = engine!.createProject({ config: config ?? {} })
+    project = engine!.createProject({ config })
     written.clear()
   }
   for (const file of written.keys()) {
@@ -68,7 +53,7 @@ function sync(config: unknown, files: Files): Project {
   return project
 }
 
-function compile(config: unknown, files: Files) {
+function compile(config: KiranaConfig, files: Files) {
   const started = performance.now()
   const current = sync(config, files)
   const compiled: Record<string, string> = {}
@@ -120,7 +105,7 @@ async function handle(request: EngineRequest): Promise<unknown> {
       return commonJs(request.source, "kirana.config.ts")
     case "compile":
       if (!engine) throw new Error("the engine is not loaded")
-      return compile(request.config, request.files)
+      return compile((request.config ?? {}) as KiranaConfig, request.files)
   }
 }
 

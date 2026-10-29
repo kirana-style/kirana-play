@@ -12,12 +12,12 @@ describe("share links", () => {
       version: "0.3.5",
       files: [
         {
-          name: "App.tsx",
+          name: "app.tsx",
           code: 'export default () => <p>é 😀 "quoted"</p>\n',
         },
         { name: "kirana.config.ts", code: "export default {}\n" },
       ],
-      active: "App.tsx",
+      active: "app.tsx",
     }
     const fragment = encodeShared(project)
     expect(fragment).toMatch(/^code=[\w-]+$/)
@@ -61,53 +61,53 @@ describe("layersOf", () => {
 
 describe("the preview's modules", () => {
   it("resolves relative imports as a bundler does", () => {
-    expect(resolvePath("App.tsx", "./Card")).toBe("Card")
-    expect(resolvePath("src/ui/Button.tsx", "../tokens")).toBe("src/tokens")
+    expect(resolvePath("app.tsx", "./card")).toBe("card")
+    expect(resolvePath("src/ui/button.tsx", "../tokens")).toBe("src/tokens")
   })
 
   it("runs each module once, with the packages it is given", () => {
     const registry = createRegistry(
       {
-        "App.tsx":
-          'const card = require("./ui/Card"); const again = require("./ui/Card.tsx"); exports.same = card === again; exports.text = card.text + require("pkg").suffix',
-        "ui/Card.tsx": 'exports.text = "card"',
+        "app.tsx":
+          'const card = require("./ui/card"); const again = require("./ui/card.tsx"); exports.same = card === again; exports.text = card.text + require("pkg").suffix',
+        "ui/card.tsx": 'exports.text = "card"',
       },
       { pkg: { suffix: "!" } }
     )
-    expect(registry.require("App.tsx")).toEqual({ same: true, text: "card!" })
+    expect(registry.require("app.tsx")).toEqual({ same: true, text: "card!" })
   })
 
   it("names what it cannot find", () => {
     const registry = createRegistry(
-      { "App.tsx": 'require("./Missing")', "B.tsx": 'require("lodash")' },
+      { "app.tsx": 'require("./missing")', "b.tsx": 'require("lodash")' },
       {}
     )
-    expect(() => registry.require("App.tsx")).toThrow('cannot find "./Missing"')
-    expect(() => registry.require("B.tsx")).toThrow('no package "lodash"')
+    expect(() => registry.require("app.tsx")).toThrow('cannot find "./missing"')
+    expect(() => registry.require("b.tsx")).toThrow('no package "lodash"')
   })
 })
 
 describe("project files", () => {
   const files = [
     { name: "kirana.config.ts", code: "" },
-    { name: "App.tsx", code: "" },
-    { name: "Component.tsx", code: "" },
+    { name: "app.tsx", code: "" },
+    { name: "component.tsx", code: "" },
   ]
 
   it("keeps the configuration last", () => {
     expect(ordered(files).map((file) => file.name)).toEqual([
-      "App.tsx",
-      "Component.tsx",
+      "app.tsx",
+      "component.tsx",
       "kirana.config.ts",
     ])
   })
 
   it("names new files and refuses bad names", () => {
-    expect(freshName(files)).toBe("Component2.tsx")
-    expect(invalidName("Card.tsx", files)).toBeUndefined()
+    expect(freshName(files)).toBe("component-2.tsx")
+    expect(invalidName("card.tsx", files)).toBeUndefined()
     expect(invalidName("src/tokens.ts", files)).toBeUndefined()
-    expect(invalidName("App.tsx", files)).toBe("App.tsx already exists")
-    expect(invalidName("App.tsx", files, "App.tsx")).toBeUndefined()
+    expect(invalidName("app.tsx", files)).toBe("app.tsx already exists")
+    expect(invalidName("app.tsx", files, "app.tsx")).toBeUndefined()
     expect(invalidName("notes.md", files)).toMatch(/ending in/)
     expect(invalidName("../x.ts", files)).toMatch(/ending in/)
   })

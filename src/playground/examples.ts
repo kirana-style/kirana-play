@@ -22,12 +22,12 @@ export default defineConfig({
 
 const STARTER_APP = `import { css } from "@kirana-style/core"
 
-import { Card } from "./Card"
+import { Card } from "./card"
 import { color, space } from "./tokens"
 
 const steps = [
-  <>Edit the root component in <code>App.tsx</code>.</>,
-  <>Add files with <code>+</code>; import them as <code>./Card</code>.</>,
+  <>Edit the root component in <code>app.tsx</code>.</>,
+  <>Add files with <code>+</code>; import them as <code>./card</code>.</>,
   <>Define tokens in <code>tokens.ts</code> and read them anywhere.</>,
   <>Share copies a link that holds the whole project.</>,
 ]
@@ -142,7 +142,7 @@ const curated = (
   id,
   title,
   description,
-  files: [{ name: "App.tsx", code }],
+  files: [{ name: "app.tsx", code }],
 })
 
 export const EXAMPLES: Example[] = [
@@ -151,8 +151,8 @@ export const EXAMPLES: Example[] = [
     title: "Starter",
     description: "Components, tokens and a configuration in their own files",
     files: [
-      { name: "App.tsx", code: STARTER_APP },
-      { name: "Card.tsx", code: STARTER_CARD },
+      { name: "app.tsx", code: STARTER_APP },
+      { name: "card.tsx", code: STARTER_CARD },
       { name: "tokens.ts", code: STARTER_TOKENS },
       { name: "kirana.config.ts", code: CONFIG },
     ],

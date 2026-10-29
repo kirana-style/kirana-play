@@ -44,6 +44,7 @@ export default defineConfig({
   // frame loads its script as a module: both need ES module workers.
   worker: { format: "es" },
   server: {
+    port: 3004,
     // As in production (`public/_headers`, `src/start.ts`): the page is
     // cross-origin isolated, and the preview frame, an opaque origin, reads
     // its script and React with CORS.
@@ -201,6 +202,12 @@ export default defineConfig({
       "import/no-commonjs": "error",
       "import/no-duplicates": "error",
       "unicorn/prefer-node-protocol": "error",
+      // Files are kebab-case. TanStack Router's route names (`__root`,
+      // `engine.$`) are its own syntax.
+      "unicorn/filename-case": [
+        "error",
+        { case: "kebabCase", ignore: ["^(?:__root|.+\\.\\$)\\.tsx?$"] },
+      ],
       "typescript/ban-ts-comment": [
         "error",
         {

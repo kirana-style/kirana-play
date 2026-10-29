@@ -22,9 +22,12 @@ export type Compiled = CompileOutput & { config?: Diagnostic }
 
 const DEBOUNCE = 150
 
-/** The entry the preview renders: `App.tsx` when there is one, else the first module. */
+/**
+ * The entry the preview renders: `app.tsx` when there is one (`App.tsx` in a
+ * link shared before the files were named in kebab-case), else the first module.
+ */
 export function entryOf(files: Files): string | undefined {
-  if ("App.tsx" in files) return "App.tsx"
+  for (const entry of ["app.tsx", "App.tsx"]) if (entry in files) return entry
   return Object.keys(files).find(isModule)
 }
 
@@ -36,6 +39,7 @@ function configProblem(message: string): Diagnostic {
     file: CONFIG_FILE,
     message: `the configuration could not be evaluated: ${message}`,
     help: [],
+    span: { start: 0, end: 0 },
     start: { line: 1, column: 1 },
     end: { line: 1, column: 1 },
   }

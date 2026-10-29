@@ -9,6 +9,8 @@ import { env } from "cloudflare:workers"
 import { compareVersions } from "./versions.ts"
 
 const PACKAGE = "@kirana-style/compiler-browser"
+/** The first release with a browser engine: the 0.0.0 that reserved the name has none. */
+const FIRST = "0.3.5"
 const VERSION = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/
 const FILE = /^[\w-]+(?:\.[\w-]+)*\.(?:js|mjs|wasm)$/
 const TYPES: Record<string, string> = {
@@ -29,7 +31,9 @@ async function cached(
 ): Promise<Response> {
   const cache = typeof caches === "undefined" ? undefined : caches.default
   const hit = await cache?.match(request)
-  if (hit) return hit
+  // A cached response's headers are immutable, and the isolation middleware
+  // (`src/start.ts`) still sets its own: hand it a copy.
+  if (hit) return new Response(hit.body, hit)
   const response = await make()
   if (response.ok && cache) await cache.put(request, response.clone())
   return response
@@ -88,7 +92,10 @@ export async function engineVersions(
     }
     return json(
       Object.keys(versions)
-        .filter((version) => VERSION.test(version))
+        .filter(
+          (version) =>
+            VERSION.test(version) && compareVersions(version, FIRST) >= 0
+        )
         .sort(compareVersions)
         .reverse()
     )

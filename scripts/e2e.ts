@@ -89,8 +89,8 @@ try {
   )
 
   await page.getByRole("tab", { name: "Preview" }).click()
-  await page.getByRole("tab", { name: /Card\.tsx/ }).click()
-  await page.locator('[aria-label="Card.tsx source"]').click()
+  await page.getByRole("tab", { name: /card\.tsx/ }).click()
+  await page.locator('[aria-label="card.tsx source"]').click()
   await page.keyboard.press("Control+End")
   await page.keyboard.type('\nexport const broken = css({ padding: "red" })\n')
   await page
@@ -119,9 +119,32 @@ try {
   await second.goto(link)
   await settled(second)
   const restored = await second
-    .locator('[aria-label="Card.tsx source"]')
+    .locator('[aria-label="card.tsx source"]')
     .innerText()
   check("a shared link opens the same project", restored.includes("broken"))
+
+  // The browser caches the engine's files for good, so ask the Worker directly,
+  // twice: the second answer comes from its cache.
+  const version = await page.locator("footer select").inputValue()
+  const answers: string[] = []
+  for (const path of [`engine/${version}/runtime.js`, "engine/versions"])
+    for (let time = 0; time < 2; time++) {
+      const answer = await context.request.get(new URL(path, base).href)
+      answers.push(`${path} ${answer.status()}`)
+    }
+  check(
+    "the engine route answers from its cache",
+    answers.every((answer) => answer.endsWith(" 200")),
+    answers.join(", ")
+  )
+  const listed = (await (
+    await context.request.get(new URL("engine/versions", base).href)
+  ).json()) as { versions: string[] }
+  check(
+    "the version list holds only engines",
+    listed.versions.includes(version) && !listed.versions.includes("0.0.0"),
+    listed.versions.join(", ")
+  )
 
   check("no page errors", errors.length === 0, errors.join("; "))
 } finally {

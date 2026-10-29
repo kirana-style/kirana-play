@@ -75,12 +75,12 @@ export function saveProject(project: Project): void {
 /** A name for a new file that no file has yet. */
 export function freshName(
   files: ProjectFile[],
-  base = "Component",
+  base = "component",
   extension = ".tsx"
 ): string {
   const taken = new Set(files.map((file) => file.name))
   for (let index = 1; ; index++) {
-    const name = `${base}${index === 1 ? "" : index}${extension}`
+    const name = `${base}${index === 1 ? "" : `-${index}`}${extension}`
     if (!taken.has(name)) return name
   }
 }

@@ -1,27 +1,14 @@
 /**
  * What the page and the engine worker say to each other. The engine is
  * `@kirana-style/compiler-browser` at the version the page picked, loaded in
- * the worker from `/engine/<version>/` (the Worker proxies npm), so its types
- * are written here rather than imported: the page never bundles an engine.
+ * the worker from `/engine/<version>/` (the Worker proxies npm); only its
+ * types come from the dependency, so the page never bundles an engine.
  */
+import type { Diagnostic } from "@kirana-style/compiler-browser"
 
-/** A place in a file: line and column from 1, the column in UTF-16 code units. */
-export type Position = { line: number; column: number }
+export type { Diagnostic, Position } from "@kirana-style/compiler-browser"
 
-/** A diagnostic as the engine reports it, with where it is in its file. */
-export type Diagnostic = {
-  code: string
-  name: string
-  severity: "info" | "warning" | "error"
-  /** The file, relative to the project root; empty for the project as a whole. */
-  file: string
-  message: string
-  help: string[]
-  start?: Position
-  end?: Position
-}
-
-/** The project's files, by path relative to its root (`App.tsx`, `src/tokens.ts`). */
+/** The project's files, by path relative to its root (`app.tsx`, `src/tokens.ts`). */
 export type Files = Readonly<Record<string, string>>
 
 export type CompileOutput = {

@@ -7,7 +7,7 @@ import { EXAMPLES } from "./examples.ts"
 import type { Example } from "./examples.ts"
 import { ChevronIcon } from "./icons.tsx"
 import { ui } from "./ui.ts"
-import type { Status } from "./useCompiler.ts"
+import type { Status } from "./use-compiler.ts"
 
 type Props = {
   example?: string
