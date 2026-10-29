@@ -27,7 +27,8 @@ export const color = defineTokens(
 export const font = defineTokens("play-font", {
   sans: '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
   mono: '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
-  wordmark: '"Crimson Pro", ui-serif, Georgia, serif',
+  /** Crimson Pro's italic, for the wordmark: EB Garamond's italic r reads as a v at its size. */
+  wordmark: '"Crimson Pro Variable", ui-serif, Georgia, serif',
 })
 
 export const radius = defineTokens("play-radius", {

@@ -1,4 +1,4 @@
 /* The brand's faces, served from this origin (the page is cross-origin isolated). */
 @import "@fontsource-variable/plus-jakarta-sans/index.css";
 @import "@fontsource-variable/jetbrains-mono/index.css";
-@import "@fontsource/crimson-pro/400-italic.css";
+@import "@fontsource-variable/crimson-pro/wght-italic.css";
