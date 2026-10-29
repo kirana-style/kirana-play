@@ -3,3 +3,10 @@
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
+
+# The preview frame is sandboxed to an opaque origin, so to it this origin is another one: it loads
+# its script (and the chunks that script imports) with CORS, and the page's COEP asks each response
+# to allow being read cross-origin.
+/assets/*
+  Access-Control-Allow-Origin: *
+  Cross-Origin-Resource-Policy: cross-origin

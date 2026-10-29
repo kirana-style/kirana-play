@@ -23,15 +23,38 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   // `vp run` reads the config to find its tasks; `lazyPlugins` keeps the plugins (and the native
   // engine Kirana's plugin opens) out of that read and in for every build, dev server and test.
-  plugins: lazyPlugins(() => [
-    // First: it takes over the "ssr" environment before TanStack Start configures it, so the
-    // server half runs in workerd, the runtime the `play` Worker uses (wrangler.jsonc).
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
-    // Ahead of the framework plugins, so modules reach them already compiled.
-    kirana(),
-    tanstackStart({ router: { quoteStyle: "double", semicolons: false } }),
-    viteReact(),
-  ]),
+  // Unit tests run none of them: they test plain modules, and the Cloudflare
+  // plugin would turn the test run into a Worker.
+  plugins: lazyPlugins(() =>
+    process.env.VITEST
+      ? []
+      : [
+          // First: it takes over the "ssr" environment before TanStack Start configures it, so the
+          // server half runs in workerd, the runtime the `play` Worker uses (wrangler.jsonc).
+          cloudflare({ viteEnvironment: { name: "ssr" } }),
+          // Ahead of the framework plugins, so modules reach them already compiled.
+          kirana(),
+          tanstackStart({
+            router: { quoteStyle: "double", semicolons: false },
+          }),
+          viteReact(),
+        ]
+  ),
+  // The engine worker imports the engine with `import()`, and the preview
+  // frame loads its script as a module: both need ES module workers.
+  worker: { format: "es" },
+  server: {
+    port: 3004,
+    // As in production (`public/_headers`, `src/start.ts`): the page is
+    // cross-origin isolated, and the preview frame, an opaque origin, reads
+    // its script and React with CORS.
+    cors: true,
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+    },
+  },
   build: {
     cssMinify: true,
     minify: true,
@@ -40,6 +63,9 @@ export default defineConfig({
     // rewrites `light-dark()` into switches nothing sets, and colours vanish in production only.
     cssTarget: ["chrome123", "safari17.5", "firefox120"],
   },
+  // Unit tests: what runs without a browser (`vp test`). The playground in a
+  // browser is `scripts/e2e.ts`.
+  test: { include: ["test/**/*.test.ts"] },
   // The tasks: `vp run <name>`. `vp run prepush` is what the pre-push hook runs; CI runs the same.
   run: {
     tasks: {
@@ -50,9 +76,13 @@ export default defineConfig({
       },
       // `build` is package.json's script: the Worker and its static files into dist/, where a
       // Kirana compiler error fails it.
+      test: {
+        command: "vp test run",
+        cache: { input: SOURCES, output: [] },
+      },
       prepush: {
         command: "echo All checks passed.",
-        dependsOn: ["check", "build"],
+        dependsOn: ["check", "test", "build"],
         cache: false,
       },
     },
@@ -172,6 +202,12 @@ export default defineConfig({
       "import/no-commonjs": "error",
       "import/no-duplicates": "error",
       "unicorn/prefer-node-protocol": "error",
+      // Files are kebab-case. TanStack Router's route names (`__root`,
+      // `engine.$`) are its own syntax.
+      "unicorn/filename-case": [
+        "error",
+        { case: "kebabCase", ignore: ["^(?:__root|.+\\.\\$)\\.tsx?$"] },
+      ],
       "typescript/ban-ts-comment": [
         "error",
         {

@@ -3,14 +3,25 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import { css } from "@kirana-style/core"
 
 import kiranaCss from "@kirana-style/core/stylesheet.css?url"
+import fontsCss from "@/theme/fonts.css?url"
+import { color, font } from "@/theme/tokens.ts"
 
 const styles = {
+  // The scheme follows the system unless the footer's toggle picked one,
+  // which it writes to `<html data-scheme>`.
+  html: css({
+    colorScheme: {
+      base: "light dark",
+      '[data-scheme="light"]': "light",
+      '[data-scheme="dark"]': "dark",
+    },
+  }),
   body: css({
     margin: 0,
-    backgroundColor: "light-dark(#faf8f3, #14110f)",
-    color: "light-dark(#1d1a16, #ece6dc)",
-    fontFamily: "ui-sans-serif, system-ui, sans-serif",
-    colorScheme: "light dark",
+    backgroundColor: color.background,
+    color: color.foreground,
+    fontFamily: font.sans,
+    WebkitFontSmoothing: "antialiased",
   }),
 }
 
@@ -26,14 +37,17 @@ export const Route = createRootRoute({
           "Type a component and see the CSS Kirana compiles it to, in your browser.",
       },
     ],
-    links: [{ rel: "stylesheet", href: kiranaCss }],
+    links: [
+      { rel: "stylesheet", href: fontsCss },
+      { rel: "stylesheet", href: kiranaCss },
+    ],
   }),
   shellComponent: Document,
 })
 
 function Document({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" sx={styles.html} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
