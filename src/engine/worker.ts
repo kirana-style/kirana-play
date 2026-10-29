@@ -8,6 +8,8 @@ import type * as Kirana from "@kirana-style/compiler-browser"
 import type { Project } from "@kirana-style/compiler-browser"
 import { transform } from "sucrase"
 
+import { PREVIEW_PACKAGES } from "@/preview/protocol.ts"
+
 import { isModule } from "./protocol.ts"
 import type {
   Diagnostic,
@@ -33,7 +35,11 @@ function commonJs(code: string, file: string): string {
 }
 
 /** Opens a new project when the configuration changed, else writes what changed. */
-function sync(config: KiranaConfig, files: Files): Project {
+function sync(declared: KiranaConfig, files: Files): Project {
+  const config = {
+    ...declared,
+    externals: [...(declared.externals ?? []), ...PREVIEW_PACKAGES],
+  }
   const json = engine!.configJson("/app", config, {})
   if (project?.configJson !== json) {
     project = engine!.createProject({ config })

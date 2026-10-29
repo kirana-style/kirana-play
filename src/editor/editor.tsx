@@ -16,7 +16,7 @@ import { bracketMatching, indentOnInput } from "@codemirror/language"
 import { lintGutter, lintKeymap, setDiagnostics } from "@codemirror/lint"
 import type { Diagnostic as Lint } from "@codemirror/lint"
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search"
-import { EditorState } from "@codemirror/state"
+import { EditorState, Transaction } from "@codemirror/state"
 import type { Extension, Text } from "@codemirror/state"
 import {
   drawSelection,
@@ -135,8 +135,15 @@ export function Editor({
         ...(readOnly
           ? [EditorState.readOnly.of(true), EditorView.editable.of(false)]
           : []),
+        // Only what the person typed: a value written in from outside (an
+        // example, a shared link) is not an edit of theirs.
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) change.current?.(update.state.doc.toString())
+          const typed = update.transactions.some(
+            (transaction) =>
+              transaction.docChanged &&
+              !transaction.annotation(Transaction.remote)
+          )
+          if (typed) change.current?.(update.state.doc.toString())
         }),
       ],
     })
@@ -174,6 +181,7 @@ export function Editor({
     if (!editor || editor.state.doc.toString() === value) return
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: value },
+      annotations: Transaction.remote.of(true),
     })
   }, [value])
 

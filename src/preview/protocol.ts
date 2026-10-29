@@ -2,6 +2,19 @@
 
 export type Scheme = "light" | "dark" | "system"
 
+/**
+ * The packages the frame gives a project's modules (`runtime.tsx`). The
+ * engine's in-memory project has no `node_modules`, so they are its
+ * `externals`: an import from one is a runtime value, as Kirana's adapters
+ * declare what their bundler provides.
+ */
+export const PREVIEW_PACKAGES = [
+  "react",
+  "react/jsx-runtime",
+  "react-dom",
+  "react-dom/client",
+] as const
+
 export type ToFrame =
   /** Evaluate the configuration module (CommonJS) and send back its default export. */
   | { type: "config"; id: number; code: string }

@@ -93,7 +93,7 @@ export function Header({
 }: Props) {
   return (
     <header sx={styles.header}>
-      <a href="/" aria-label="kirana playground, home" sx={styles.brand}>
+      <a href="/" aria-label="kirana play, home" sx={styles.brand}>
         <KiranaMark />
         <Wordmark />
       </a>

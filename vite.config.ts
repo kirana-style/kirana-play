@@ -37,7 +37,11 @@ export default defineConfig({
           tanstackStart({
             router: { quoteStyle: "double", semicolons: false },
           }),
-          viteReact(),
+          // The preview frame's script stays out of React Refresh: its wrapper
+          // imports the module itself, and once a hot update has stamped that import
+          // the frame runs two copies, two React roots on one element. The frame
+          // reloads instead (`src/preview/runtime.tsx`).
+          viteReact({ exclude: [/\/node_modules\//, /\/src\/preview\//] }),
         ]
   ),
   // The engine worker imports the engine with `import()`, and the preview
