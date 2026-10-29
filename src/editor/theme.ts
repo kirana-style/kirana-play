@@ -104,6 +104,58 @@ export const editorTheme = EditorView.theme({
     textUnderlineOffset: "3px",
   },
   ".cm-panels": { backgroundColor: "transparent", color: "inherit" },
+  // TypeScript's completion list and its hover card (`typescript.ts`).
+  ".cm-tooltip.cm-tooltip-autocomplete > ul": {
+    fontFamily:
+      '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: "12.5px",
+    maxHeight: "16rem",
+    minWidth: "16rem",
+    padding: "0.25rem",
+  },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
+    padding: "0.1875rem 0.5rem",
+    borderRadius: "0.375rem",
+    lineHeight: "1.5",
+  },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
+    backgroundColor:
+      "light-dark(oklch(0.5 0.09 185 / 14%), oklch(0.82 0.1 185 / 18%))",
+    color: "inherit",
+  },
+  ".cm-completionIcon": { opacity: 0.6, width: "1.25em" },
+  ".cm-completionMatchedText": { textDecoration: "none", fontWeight: 700 },
+  ".cm-tooltip.cm-completionInfo": { padding: 0, maxWidth: "32rem" },
+  ".cm-ts-info": { padding: "0.5rem 0.75rem", maxWidth: "36rem" },
+  ".cm-ts-signature": {
+    display: "block",
+    fontFamily:
+      '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: "12.5px",
+    lineHeight: "1.55",
+    whiteSpace: "pre-wrap",
+  },
+  // The signature's parts in the palette the code is highlighted with.
+  ".cm-ts-keyword": { color: "light-dark(#cf222e, #ff7b72)" },
+  ".cm-ts-stringLiteral": { color: "light-dark(#0a3069, #a5d6ff)" },
+  ".cm-ts-numericLiteral, .cm-ts-propertyName": {
+    color: "light-dark(#0550ae, #79c0ff)",
+  },
+  ".cm-ts-functionName, .cm-ts-methodName": {
+    color: "light-dark(#8250df, #d2a8ff)",
+  },
+  ".cm-ts-className, .cm-ts-interfaceName, .cm-ts-aliasName, .cm-ts-enumName, .cm-ts-typeParameterName":
+    { color: "light-dark(#953800, #ffa657)" },
+  ".cm-ts-punctuation, .cm-ts-operator": { color: muted },
+  ".cm-ts-doc": {
+    margin: "0.5rem 0 0",
+    maxWidth: "32rem",
+    fontFamily:
+      '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
+    fontSize: "12.5px",
+    lineHeight: "1.5",
+    color: muted,
+  },
 })
 
 /** GitHub's light and dark syntax colours, paired. */

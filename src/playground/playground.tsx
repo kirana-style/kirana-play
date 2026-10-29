@@ -5,6 +5,7 @@ import { css } from "@kirana-style/core"
 import { Editor, languageOf } from "@/editor/editor.tsx"
 import type { Diagnostic, Position } from "@/engine/protocol.ts"
 import { DEFAULT_VERSION } from "@/engine/version.ts"
+import { startTypeScript } from "@/language/client.ts"
 import { connectFrame, frameDocument } from "@/preview/frame.ts"
 import type { Frame } from "@/preview/frame.ts"
 import type { Scheme } from "@/preview/protocol.ts"
@@ -146,6 +147,10 @@ export function Playground() {
   const document_ = useMemo(() => frameDocument(), [])
 
   const files = useMemo(() => filesOf(project), [project])
+  // TypeScript for the editor, in its own worker, started by the first
+  // completion or hover; it reads every file so imports between them resolve.
+  const typescript = useMemo(() => startTypeScript(), [])
+  useEffect(() => typescript.sync(files), [files, typescript])
   const { status, output } = useCompiler(version, files, frame)
 
   useEffect(() => {
@@ -343,6 +348,7 @@ export function Playground() {
                 label={`${active.name} source`}
                 diagnostics={diagnostics.filter((d) => d.file === active.name)}
                 reveal={reveal}
+                typescript={typescript}
                 onChange={(code) =>
                   update({
                     ...project,

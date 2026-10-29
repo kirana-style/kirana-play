@@ -2,7 +2,8 @@
  * The playground in a browser, end to end: the built Worker (`wrangler dev`)
  * serves the page, the engine of the version it opens with compiles the
  * starter, the CSS pane shows its layers, the sandboxed frame renders it, a
- * typo shows as a problem, and a shared link opens the same project.
+ * typo shows as a problem, a shared link opens the same project, and the
+ * editor's TypeScript completes a token.
  *
  *   vp run build && bunx wrangler dev --port 8787 &
  *   bun scripts/e2e.ts                     # http://localhost:8787/
@@ -149,6 +150,24 @@ try {
     listed.versions.includes(version) && !listed.versions.includes("0.0.0"),
     listed.versions.join(", ")
   )
+
+  // TypeScript in the editor: the starter's tokens complete after a dot.
+  await page.getByRole("tab", { name: /app\.tsx/ }).click()
+  await page.locator('[aria-label="app.tsx source"]').click()
+  await page.keyboard.press("Control+End")
+  await page.keyboard.type("\nconst probe = color.")
+  const completions = page.locator(".cm-tooltip-autocomplete li")
+  await completions
+    .first()
+    .waitFor({ timeout: 60_000 })
+    .catch(() => undefined)
+  const offered = await completions.allInnerTexts()
+  check(
+    "TypeScript completes a token",
+    offered.some((label) => label.includes("hue")),
+    offered.slice(0, 8).join(", ")
+  )
+  await page.keyboard.press("Escape")
 
   check("no page errors", errors.length === 0, errors.join("; "))
 } finally {

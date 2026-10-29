@@ -8,6 +8,8 @@ writes for it, compiled in your browser by the released engine. It will answer a
   importing each other as on disk.
 - **What the compiler says:** the stylesheet by layer with its size, each module as Kirana rewrites
   it, and the diagnostics in the gutter and under the editor, as the language server shows them.
+- **TypeScript in the editor:** completion as you type and hover types, from TypeScript 6 in a worker,
+  with React's types and Kirana's own, so `color.` lists your tokens and `display: "` its values.
 - **A live preview**, in a sandboxed frame.
 - **Any release** of Kirana with a browser engine, chosen in the footer.
 - **Share** puts the whole project in the link's fragment: nothing is stored on a server.
@@ -54,6 +56,7 @@ page ──► engine worker ──► /engine/<version>/compiler.js (Kirana's W
 | `src/playground/`  | The interface: files, editor pane, output pane, problems, header and footer                  |
 | `src/ui/`          | Base UI components copied from the Kirana site's kit (`src/ui/README.md` says what changed)  |
 | `src/editor/`      | CodeMirror, its theme and Kirana's diagnostics as lint marks                                 |
+| `src/language/`    | The editor's TypeScript: a language service in a worker over the project and its types       |
 | `src/engine/`      | The engine worker and its client; the proxy that serves each version's files from npm        |
 | `src/preview/`     | The preview frame's document, its script and its small CommonJS module system                |
 | `src/start.ts`     | Cross-origin isolation on every page                                                         |
