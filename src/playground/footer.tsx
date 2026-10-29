@@ -1,12 +1,26 @@
-import { useEffect, useRef, useState } from "react"
 import { css } from "@kirana-style/core"
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 
 import { color, font } from "@/theme/tokens.ts"
+import { Button } from "@/ui/components/button.tsx"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/ui/components/dropdown-menu.tsx"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/components/select.tsx"
+import { Icon } from "@/ui/primitives/icon.tsx"
 
 import { EXAMPLES } from "./examples.ts"
 import type { Example } from "./examples.ts"
-import { ChevronIcon } from "./icons.tsx"
-import { ui } from "./ui.ts"
 import type { Status } from "./use-compiler.ts"
 
 type Props = {
@@ -39,44 +53,9 @@ const styles = {
     display: { base: "none", "@media (min-width: 40rem)": "inline" },
   }),
   exampleName: css({ color: color.foreground }),
-  menu: css({
-    position: "absolute",
-    insetBlockEnd: "calc(100% + 0.375rem)",
-    insetInlineStart: "0.5rem",
-    zIndex: 10,
-    display: "grid",
-    width: "min(20rem, calc(100vw - 1rem))",
-    margin: 0,
-    padding: "0.25rem",
-    listStyle: "none",
-    borderRadius: "0.875rem",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: color.border,
-    backgroundColor: color.card,
-    boxShadow: "0 12px 32px light-dark(oklch(0 0 0 / 12%), oklch(0 0 0 / 55%))",
-  }),
-  option: css({
-    display: "grid",
-    gap: "0.125rem",
-    width: "100%",
-    padding: "0.5rem 0.75rem",
-    borderWidth: 0,
-    borderRadius: "0.625rem",
-    backgroundColor: {
-      base: "transparent",
-      ":hover": color.muted,
-      ":focus-visible": color.muted,
-    },
-    color: color.foreground,
-    textAlign: "start",
-    fontFamily: font.sans,
-    cursor: "pointer",
-    outlineStyle: "none",
-  }),
-  current: css({
-    backgroundColor: { base: color.accentSoft, ":hover": color.accentSoft },
-  }),
+  menu: css({ width: "min(21rem, calc(100vw - 1rem))" }),
+  option: css({ alignItems: "start" }),
+  optionCopy: css({ display: "grid", gap: "0.125rem" }),
   optionTitle: css({ fontSize: "0.8125rem", fontWeight: 600 }),
   optionText: css({ fontSize: "0.75rem", color: color.mutedForeground }),
   status: css({
@@ -98,28 +77,7 @@ const styles = {
     fontWeight: 500,
     color: color.mutedForeground,
   }),
-  version: css({
-    appearance: "none",
-    minHeight: "1.75rem",
-    paddingInline: "0.5rem 1.375rem",
-    borderRadius: "0.5rem",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: color.border,
-    backgroundColor: { base: "transparent", ":hover": color.muted },
-    backgroundImage: `linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%)`,
-    backgroundPosition: "calc(100% - 0.75rem) 55%, calc(100% - 0.5rem) 55%",
-    backgroundSize: "0.25rem 0.25rem",
-    backgroundRepeat: "no-repeat",
-    color: color.foreground,
-    fontFamily: font.mono,
-    fontSize: "0.75rem",
-    cursor: "pointer",
-    outlineColor: color.accent,
-    outlineOffset: "2px",
-    outlineStyle: { base: "none", ":focus-visible": "solid" },
-    outlineWidth: "2px",
-  }),
+  version: css({ fontFamily: font.mono }),
 }
 
 function statusText(status: Status): string {
@@ -144,66 +102,43 @@ export function Footer({
   onVersion,
 }: Props) {
   const choices = versions.includes(version) ? versions : [version, ...versions]
-  const [open, setOpen] = useState(false)
-  const root = useRef<HTMLDivElement>(null)
   const current = EXAMPLES.find((item) => item.id === example)
-
-  useEffect(() => {
-    if (!open) return
-    const close = (event: PointerEvent | KeyboardEvent) => {
-      if (
-        event instanceof KeyboardEvent
-          ? event.key === "Escape"
-          : !root.current?.contains(event.target as Node)
-      )
-        setOpen(false)
-    }
-    document.addEventListener("pointerdown", close)
-    document.addEventListener("keydown", close)
-    return () => {
-      document.removeEventListener("pointerdown", close)
-      document.removeEventListener("keydown", close)
-    }
-  }, [open])
 
   return (
     <footer sx={styles.footer}>
-      <div ref={root}>
-        <button
-          type="button"
-          aria-haspopup="true"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-          sx={ui.button}
-        >
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
           <span sx={styles.exampleLabel}>Example</span>
           <span sx={styles.exampleName}>
             {current?.title ?? "Your project"}
           </span>
-          <ChevronIcon sx={ui.icon} />
-        </button>
-        {open && (
-          <ul role="menu" aria-label="Examples" sx={styles.menu}>
+          <Icon icon={ArrowDown01Icon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" submenu sx={styles.menu}>
+          <DropdownMenuRadioGroup
+            value={example ?? ""}
+            onValueChange={(id: string) => {
+              const chosen = EXAMPLES.find((item) => item.id === id)
+              if (chosen) onExample(chosen)
+            }}
+          >
             {EXAMPLES.map((item) => (
-              <li key={item.id} role="none">
-                <button
-                  type="button"
-                  role="menuitem"
-                  autoFocus={item.id === (example ?? EXAMPLES[0]!.id)}
-                  onClick={() => {
-                    setOpen(false)
-                    onExample(item)
-                  }}
-                  sx={[styles.option, item.id === example && styles.current]}
-                >
+              <DropdownMenuRadioItem
+                key={item.id}
+                value={item.id}
+                // Choosing an example is the whole errand: the menu closes.
+                closeOnClick
+                sx={styles.option}
+              >
+                <span sx={styles.optionCopy}>
                   <span sx={styles.optionTitle}>{item.title}</span>
                   <span sx={styles.optionText}>{item.description}</span>
-                </button>
-              </li>
+                </span>
+              </DropdownMenuRadioItem>
             ))}
-          </ul>
-        )}
-      </div>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <span
         role="status"
         data-state={status.kind}
@@ -212,21 +147,32 @@ export function Footer({
       >
         {statusText(status)}
       </span>
-      <label sx={styles.versionLabel}>
-        <span sx={styles.wide}>Kirana</span>
-        <span sx={ui.visuallyHidden}>version</span>
-        <select
+      <div sx={styles.versionLabel}>
+        <span sx={styles.wide} aria-hidden="true">
+          Kirana
+        </span>
+        <Select
           value={version}
-          onChange={(event) => onVersion(event.target.value)}
-          sx={styles.version}
+          onValueChange={(next) => {
+            if (typeof next === "string") onVersion(next)
+          }}
         >
-          {choices.map((choice) => (
-            <option key={choice} value={choice}>
-              v{choice}
-            </option>
-          ))}
-        </select>
-      </label>
+          <SelectTrigger
+            size="sm"
+            aria-label="Kirana version"
+            sx={styles.version}
+          >
+            <SelectValue>{(value: string) => `v${value}`}</SelectValue>
+          </SelectTrigger>
+          <SelectContent side="top" alignItemWithTrigger={false}>
+            {choices.map((choice) => (
+              <SelectItem key={choice} value={choice} sx={styles.version}>
+                v{choice}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </footer>
   )
 }

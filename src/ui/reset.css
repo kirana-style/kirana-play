@@ -1,0 +1,149 @@
+/*
+ * The kit's reset, from the Kirana site's globals.css (packages/ui, at 8bca0d5): the components in
+ * src/ui are written against it (a link takes its component's colour, a button no UA background).
+ * Kirana's layer statement puts `reset` below every Kirana rule (kirana.config.ts). The fonts and the
+ * `base` rules for components this copy does not have are left out.
+ */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+  }
+
+  /*
+   * Padding too, as Tailwind's preflight does. Without it the browser's own
+   * defaults leak through — 1px on every table cell, which made the calendar's
+   * weekday row 2px taller than the original.
+   */
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    line-height: 1.5;
+    -moz-tab-size: 4;
+    tab-size: 4;
+    /* Numbers in headings and stats sit on the line like capitals, whatever a face's default
+       figures are. */
+    font-variant-numeric: lining-nums;
+  }
+
+  /*
+   * No `-webkit-font-smoothing` here. The original never set it, and forcing
+   * grayscale antialiasing renders every glyph visibly thinner on macOS.
+   */
+  body {
+    min-height: 100vh;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Links take the colour and decoration of their component, not the UA's. */
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background-color: transparent;
+    border-radius: 0;
+    padding: 0;
+    /* Chrome dims a disabled select to 0.7 on its own; components decide. */
+    opacity: 1;
+  }
+
+  button,
+  [type="button"],
+  [type="reset"],
+  [type="submit"] {
+    appearance: button;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Tailwind's preflight: inline code and key text use the monospace stack. */
+  :where(code, kbd, samp, pre) {
+    font-family: var(
+      --font-mono,
+      "JetBrains Mono Variable",
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      "Liberation Mono",
+      "Courier New",
+      monospace
+    );
+    font-size: 1em;
+  }
+
+  /* Selected text in the sun: the brand's one constant accent, the gold light every landscape
+     shares (the brand page, /brand). A literal, as this file is token-free. */
+  ::selection {
+    background-color: rgb(247 184 61 / 0.38);
+  }
+
+  :where(h1, h2, h3, h4, h5, h6) {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  :where(ol, ul, menu) {
+    list-style: none;
+    padding: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-color: inherit;
+    text-indent: 0;
+  }
+
+  /*
+   * Tailwind's preflight value. Controls set their own placeholder colour; this
+   * covers bare inputs such as cmdk's, which otherwise fall back to the
+   * browser's grey.
+   */
+  ::placeholder {
+    opacity: 1;
+    color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}

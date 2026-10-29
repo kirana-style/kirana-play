@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { css } from "@kirana-style/core"
+import { ArrowUp01Icon } from "@hugeicons/core-free-icons"
 
 import type { Diagnostic } from "@/engine/protocol.ts"
 import { color, font } from "@/theme/tokens.ts"
 
-import { ChevronIcon } from "./icons.tsx"
+import { Icon } from "@/ui/primitives/icon.tsx"
 import { ui } from "./ui.ts"
 
 type Props = {
@@ -116,7 +117,7 @@ export function Problems({ diagnostics, onOpen }: Props) {
           {warnings === 1 ? "warning" : "warnings"} ·{" "}
           {diagnostics.length - errors - warnings} info
         </span>
-        <ChevronIcon sx={[ui.icon, styles.chevron, open && styles.open]} />
+        <Icon icon={ArrowUp01Icon} sx={[styles.chevron, open && styles.open]} />
       </button>
       {open &&
         (diagnostics.length === 0 ? (

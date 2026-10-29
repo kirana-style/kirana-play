@@ -4,6 +4,7 @@ import { css } from "@kirana-style/core"
 
 import kiranaCss from "@kirana-style/core/stylesheet.css?url"
 import fontsCss from "@/theme/fonts.css?url"
+import resetCss from "@/ui/reset.css?url"
 import { color, font } from "@/theme/tokens.ts"
 
 const styles = {
@@ -43,6 +44,7 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "stylesheet", href: fontsCss },
+      { rel: "stylesheet", href: resetCss },
       { rel: "stylesheet", href: kiranaCss },
     ],
   }),

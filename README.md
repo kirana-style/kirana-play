@@ -52,6 +52,7 @@ page ──► engine worker ──► /engine/<version>/compiler.js (Kirana's W
 | ------------------ | -------------------------------------------------------------------------------------------- |
 | `src/routes/`      | The playground page (client only) and the `/engine/*` route                                  |
 | `src/playground/`  | The interface: files, editor pane, output pane, problems, header and footer                  |
+| `src/ui/`          | Base UI components copied from the Kirana site's kit (`src/ui/README.md` says what changed)  |
 | `src/editor/`      | CodeMirror, its theme and Kirana's diagnostics as lint marks                                 |
 | `src/engine/`      | The engine worker and its client; the proxy that serves each version's files from npm        |
 | `src/preview/`     | The preview frame's document, its script and its small CommonJS module system                |
