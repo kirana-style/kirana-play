@@ -9,6 +9,7 @@ import { connectFrame, frameDocument } from "@/preview/frame.ts"
 import type { Frame } from "@/preview/frame.ts"
 import type { Scheme } from "@/preview/protocol.ts"
 import { color } from "@/theme/tokens.ts"
+import { ToggleGroup, ToggleGroupItem } from "@/ui/components/toggle-group.tsx"
 
 import type { Example } from "./examples.ts"
 import { FileTabs } from "./file-tabs.tsx"
@@ -28,7 +29,6 @@ import {
 } from "./project.ts"
 import type { Project } from "./project.ts"
 import { encodeShared } from "./share.ts"
-import { ui } from "./ui.ts"
 import { useCompiler } from "./use-compiler.ts"
 
 const SCHEME = "kirana-play:scheme"
@@ -50,7 +50,8 @@ const styles = {
     borderBottomStyle: "solid",
     borderBottomColor: color.border,
   }),
-  switch: css({ flexGrow: 1, minHeight: "2.25rem" }),
+  switches: css({ flexGrow: 1 }),
+  switch: css({ flexGrow: 1 }),
   // A column, not a grid: the pane switch is not displayed on wide screens,
   // and the panes must take the rest whether it is or not.
   main: css({ display: "flex", flexDirection: "column", minHeight: 0 }),
@@ -257,18 +258,23 @@ export function Playground() {
         }}
       />
       <div sx={styles.main}>
-        <div role="group" aria-label="Pane" sx={styles.switcher}>
-          {(["code", "output"] as const).map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={pane === id}
-              onClick={() => setPane(id)}
-              sx={[ui.button, styles.switch, pane === id && ui.pressed]}
-            >
-              {id === "code" ? "Code" : "Output"}
-            </button>
-          ))}
+        <div sx={styles.switcher}>
+          <ToggleGroup
+            aria-label="Pane"
+            variant="outline"
+            spacing={0}
+            value={[pane]}
+            onValueChange={(next: string[]) => {
+              if (next[0]) setPane(next[0] as typeof pane)
+            }}
+            sx={styles.switches}
+          >
+            {(["code", "output"] as const).map((id) => (
+              <ToggleGroupItem key={id} value={id} sx={styles.switch}>
+                {id === "code" ? "Code" : "Output"}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
         <div
           ref={panes}

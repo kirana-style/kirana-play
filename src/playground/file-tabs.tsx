@@ -1,10 +1,18 @@
 import { useState } from "react"
 import { css } from "@kirana-style/core"
+import {
+  Add01Icon,
+  Cancel01Icon,
+  FileCodeIcon,
+  Settings02Icon,
+} from "@hugeicons/core-free-icons"
 
 import { CONFIG_FILE } from "@/engine/protocol.ts"
 import { color, font } from "@/theme/tokens.ts"
 
-import { CloseIcon, FileIcon, GearIcon, PlusIcon } from "./icons.tsx"
+import { Button } from "@/ui/components/button.tsx"
+import { Icon } from "@/ui/primitives/icon.tsx"
+
 import { invalidName } from "./project.ts"
 import type { ProjectFile } from "./project.ts"
 import { ui } from "./ui.ts"
@@ -39,7 +47,6 @@ const styles = {
     backgroundColor: { base: "transparent", ":hover": color.muted },
     opacity: { base: 0.6, ":hover": 1 },
   }),
-  closeIcon: css({ width: "0.75rem", height: "0.75rem" }),
   input: css({
     width: "9rem",
     minHeight: "1.75rem",
@@ -56,11 +63,7 @@ const styles = {
     fontSize: "0.75rem",
     outlineStyle: "none",
   }),
-  add: css({
-    marginBlock: "auto",
-    marginInline: "0.25rem",
-    paddingInline: "0.5rem",
-  }),
+  add: css({ flexShrink: 0, marginBlock: "auto", marginInline: "0.25rem" }),
 }
 
 export function FileTabs({
@@ -128,7 +131,7 @@ export function FileTabs({
             }}
             sx={[ui.tab, styles.tab, selected && ui.selectedTab]}
           >
-            {config ? <GearIcon sx={ui.icon} /> : <FileIcon sx={ui.icon} />}
+            <Icon icon={config ? Settings02Icon : FileCodeIcon} />
             <span sx={ui.mono}>{file.name}</span>
             {problem && (
               <span
@@ -151,21 +154,22 @@ export function FileTabs({
                 }}
                 sx={styles.close}
               >
-                <CloseIcon sx={styles.closeIcon} />
+                <Icon icon={Cancel01Icon} size="0.75rem" />
               </span>
             )}
           </div>
         )
       })}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-sm"
         aria-label="Add a file"
         title="Add a file"
         onClick={onAdd}
-        sx={[ui.button, styles.add]}
+        sx={styles.add}
       >
-        <PlusIcon sx={ui.icon} />
-      </button>
+        <Icon icon={Add01Icon} />
+      </Button>
     </div>
   )
 }

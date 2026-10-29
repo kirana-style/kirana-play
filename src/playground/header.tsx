@@ -1,34 +1,46 @@
 import { css } from "@kirana-style/core"
+import type { Sx } from "@kirana-style/core"
+import type { IconSvgElement } from "@hugeicons/react"
+import {
+  ComputerIcon,
+  LayoutTwoColumnIcon,
+  LayoutTwoRowIcon,
+  Link01Icon,
+  Moon02Icon,
+  SourceCodeIcon,
+  Sun03Icon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons"
 
 import type { Scheme } from "@/preview/protocol.ts"
 import { color } from "@/theme/tokens.ts"
+import { Button } from "@/ui/components/button.tsx"
+import { ToggleGroup, ToggleGroupItem } from "@/ui/components/toggle-group.tsx"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/ui/components/tooltip.tsx"
+import { Icon } from "@/ui/primitives/icon.tsx"
 
 import { KiranaMark, Wordmark } from "./brand.tsx"
-import {
-  CodeIcon,
-  EyeIcon,
-  LinkIcon,
-  MonitorIcon,
-  MoonIcon,
-  SplitIcon,
-  StackIcon,
-  SunIcon,
-} from "./icons.tsx"
-import { ui } from "./ui.ts"
 
 export type Layout = "split" | "stacked" | "editor" | "preview"
 
-const LAYOUTS: { id: Layout; label: string; Icon: typeof SplitIcon }[] = [
-  { id: "split", label: "Side by side", Icon: SplitIcon },
-  { id: "stacked", label: "Stacked", Icon: StackIcon },
-  { id: "editor", label: "Code only", Icon: CodeIcon },
-  { id: "preview", label: "Output only", Icon: EyeIcon },
+type Choice<T> = { id: T; label: string; icon: IconSvgElement }
+
+const LAYOUTS: Choice<Layout>[] = [
+  { id: "split", label: "Side by side", icon: LayoutTwoColumnIcon },
+  { id: "stacked", label: "Stacked", icon: LayoutTwoRowIcon },
+  { id: "editor", label: "Code only", icon: SourceCodeIcon },
+  { id: "preview", label: "Output only", icon: ViewIcon },
 ]
 
-const SCHEMES: { id: Scheme; label: string; Icon: typeof SunIcon }[] = [
-  { id: "light", label: "Light", Icon: SunIcon },
-  { id: "dark", label: "Dark", Icon: MoonIcon },
-  { id: "system", label: "System", Icon: MonitorIcon },
+const SCHEMES: Choice<Scheme>[] = [
+  { id: "light", label: "Light", icon: Sun03Icon },
+  { id: "dark", label: "Dark", icon: Moon02Icon },
+  { id: "system", label: "System", icon: ComputerIcon },
 ]
 
 type Props = {
@@ -63,24 +75,56 @@ const styles = {
     display: { base: "none", "@media (min-width: 40rem)": "inline" },
   }),
   spacer: css({ flexGrow: 1 }),
-  group: css({ display: "flex", alignItems: "center", gap: "0.25rem" }),
+  /** The layouts only where both panes fit; the scheme at every width. */
   layouts: css({
     display: { base: "none", "@media (min-width: 64rem)": "flex" },
-    alignItems: "center",
-    gap: "0.125rem",
-    padding: "0.125rem",
-    borderRadius: "0.625rem",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: color.border,
   }),
-  /** The scheme toggle is shown at every width; the layouts only where both panes fit. */
-  schemes: css({ display: "flex" }),
-  layoutButton: css({ minHeight: "1.75rem", paddingInline: "0.375rem" }),
   docs: css({
     display: { base: "none", "@media (min-width: 40rem)": "inline-flex" },
-    textDecorationLine: "none",
   }),
+}
+
+/** A segmented choice of icons, each named by its tooltip and its label. */
+function Choices<T extends string>({
+  label,
+  choices,
+  value,
+  onChange,
+  sx,
+}: {
+  label: string
+  choices: Choice<T>[]
+  value: T
+  onChange: (value: T) => void
+  sx?: Sx
+}) {
+  return (
+    <ToggleGroup
+      aria-label={label}
+      variant="outline"
+      size="sm"
+      spacing={0}
+      value={[value]}
+      onValueChange={(next: string[]) => {
+        // A pressed item pressed again would leave nothing chosen: keep it.
+        if (next[0]) onChange(next[0] as T)
+      }}
+      sx={sx}
+    >
+      {choices.map((choice) => (
+        <Tooltip key={choice.id}>
+          <TooltipTrigger
+            render={
+              <ToggleGroupItem value={choice.id} aria-label={choice.label} />
+            }
+          >
+            <Icon icon={choice.icon} />
+          </TooltipTrigger>
+          <TooltipContent>{choice.label}</TooltipContent>
+        </Tooltip>
+      ))}
+    </ToggleGroup>
+  )
 }
 
 export function Header({
@@ -92,65 +136,50 @@ export function Header({
   onLayout,
 }: Props) {
   return (
-    <header sx={styles.header}>
-      <a href="/" aria-label="kirana play, home" sx={styles.brand}>
-        <KiranaMark />
-        <Wordmark />
-      </a>
-      <div sx={styles.spacer} />
-      <div role="group" aria-label="Layout" sx={styles.layouts}>
-        {LAYOUTS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            title={label}
-            aria-label={label}
-            aria-pressed={layout === id}
-            onClick={() => onLayout(id)}
-            sx={[ui.button, styles.layoutButton, layout === id && ui.pressed]}
-          >
-            <Icon sx={ui.icon} />
-          </button>
-        ))}
-      </div>
-      <div
-        role="group"
-        aria-label="Colour scheme"
-        sx={[styles.layouts, styles.schemes]}
-      >
-        {SCHEMES.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            title={label}
-            aria-label={label}
-            aria-pressed={scheme === id}
-            onClick={() => onScheme(id)}
-            sx={[ui.button, styles.layoutButton, scheme === id && ui.pressed]}
-          >
-            <Icon sx={ui.icon} />
-          </button>
-        ))}
-      </div>
-      <div sx={styles.group}>
-        <a
-          href="https://kirana.style/docs"
-          target="_blank"
-          rel="noreferrer"
-          sx={[ui.button, styles.docs]}
+    <TooltipProvider>
+      <header sx={styles.header}>
+        <a href="/" aria-label="kirana play, home" sx={styles.brand}>
+          <KiranaMark />
+          <Wordmark />
+        </a>
+        <div sx={styles.spacer} />
+        <Choices
+          label="Layout"
+          choices={LAYOUTS}
+          value={layout}
+          onChange={onLayout}
+          sx={styles.layouts}
+        />
+        <Choices
+          label="Colour scheme"
+          choices={SCHEMES}
+          value={scheme}
+          onChange={onScheme}
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={
+            <a
+              href="https://kirana.style/docs"
+              target="_blank"
+              rel="noreferrer"
+            />
+          }
+          sx={styles.docs}
         >
           Docs
-        </a>
-        <button
-          type="button"
+        </Button>
+        <Button
+          size="sm"
           aria-label={shared ? "Link copied" : "Share"}
           onClick={onShare}
-          sx={[ui.button, ui.primary]}
         >
-          <LinkIcon sx={ui.icon} />
+          <Icon icon={Link01Icon} />
           <span sx={styles.wide}>{shared ? "Link copied" : "Share"}</span>
-        </button>
-      </div>
-    </header>
+        </Button>
+      </header>
+    </TooltipProvider>
   )
 }

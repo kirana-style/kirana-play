@@ -127,7 +127,9 @@ try {
 
   // The browser caches the engine's files for good, so ask the Worker directly,
   // twice: the second answer comes from its cache.
-  const version = await page.locator("footer select").inputValue()
+  const version = (
+    await page.getByRole("combobox", { name: "Kirana version" }).innerText()
+  ).replace(/^v/, "")
   const answers: string[] = []
   for (const path of [`engine/${version}/runtime.js`, "engine/versions"])
     for (let time = 0; time < 2; time++) {

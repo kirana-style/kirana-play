@@ -26,19 +26,7 @@ export const ui = {
     outlineWidth: "2px",
     whiteSpace: "nowrap",
   }),
-  /** The primary button: ink on paper, paper on night. */
-  primary: css({
-    backgroundColor: { base: color.foreground, ":hover": color.foreground },
-    color: { base: color.background, ":hover": color.background },
-    opacity: { base: 1, ":hover": 0.88 },
-  }),
-  /** A button standing for the state it shows, pressed or not. */
-  pressed: css({
-    backgroundColor: { base: color.muted, ":hover": color.muted },
-    color: { base: color.foreground, ":hover": color.foreground },
-  }),
-  icon: css({ width: "1rem", height: "1rem", flexShrink: 0 }),
-  /** A tab in a strip: underlined in the hue when it is the selected one. */
+  /** A tab in a strip: underlined in ink when selected, as the kit's line tabs are. */
   tab: css({
     position: "relative",
     display: "inline-flex",
@@ -61,7 +49,7 @@ export const ui = {
     outlineWidth: "2px",
     boxShadow: {
       base: "none",
-      '[aria-selected="true"]': `inset 0 -2px 0 ${color.accent}`,
+      '[aria-selected="true"]': `inset 0 -2px 0 ${color.foreground}`,
     },
   }),
   selectedTab: css({
@@ -85,13 +73,5 @@ export const ui = {
     letterSpacing: "0.04em",
     textTransform: "uppercase",
     color: color.mutedForeground,
-  }),
-  visuallyHidden: css({
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    overflow: "hidden",
-    clipPath: "inset(50%)",
-    whiteSpace: "nowrap",
   }),
 }
