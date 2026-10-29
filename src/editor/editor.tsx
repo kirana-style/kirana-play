@@ -25,12 +25,15 @@ import {
   highlightActiveLineGutter,
   keymap,
   lineNumbers,
+  tooltips,
 } from "@codemirror/view"
 import { css } from "@kirana-style/core"
 
 import type { Diagnostic, Position } from "@/engine/protocol.ts"
+import type { TypeScript } from "@/language/client.ts"
 
 import { editorTheme, highlighting } from "./theme.ts"
+import { typescriptSupport } from "./typescript.ts"
 
 export type Language = "tsx" | "ts" | "css"
 
@@ -81,6 +84,8 @@ type Props = {
   label: string
   /** Moves the cursor here when it changes (a problem clicked in the list). */
   reveal?: Position & { at: number }
+  /** TypeScript's completion and hovers, for a project's editable files. */
+  typescript?: TypeScript
 }
 
 const styles = {
@@ -96,6 +101,7 @@ export function Editor({
   readOnly,
   label,
   reveal,
+  typescript,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
@@ -115,10 +121,15 @@ export function Editor({
         indentOnInput(),
         bracketMatching(),
         closeBrackets(),
-        autocompletion({ activateOnTyping: false }),
+        typescript && language !== "css" && !readOnly
+          ? typescriptSupport(typescript, () => current.current)
+          : autocompletion({ activateOnTyping: false }),
         highlightActiveLine(),
         highlightSelectionMatches(),
         lintGutter(),
+        // In the body, so a hover card or the completion list is not clipped
+        // by the pane; CodeMirror carries the theme's classes onto it.
+        tooltips({ parent: document.body }),
         keymap.of([
           ...closeBracketsKeymap,
           ...defaultKeymap,
