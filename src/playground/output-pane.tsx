@@ -236,12 +236,14 @@ export function OutputPane({
         ))}
       </div>
       <div sx={styles.body}>
-        {/* The frame stays mounted on every tab: it also evaluates the configuration. */}
+        {/* The frame stays mounted on every tab: it also evaluates the configuration.
+            Without allow-same-origin it is an opaque origin; allow-forms lets a
+            project's form fire its submit event, which a sandbox otherwise drops. */}
         <div sx={[styles.fill, tab !== "preview" && styles.hidden]}>
           <iframe
             ref={frameRef}
             title="Preview"
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-forms"
             srcDoc={frameDocument}
             sx={styles.frame}
           />

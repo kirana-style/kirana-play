@@ -26,13 +26,20 @@ const PACKAGES: Record<string, unknown> = {
 
 const send = (message: FromFrame) => window.parent.postMessage(message, "*")
 
+/** What went wrong, as the project's author needs it: an error's name and message. */
+function describe(error: unknown): string {
+  if (error instanceof Error)
+    return error.message ? `${error.name}: ${error.message}` : error.name
+  return String(error)
+}
+
 class Boundary extends Component<{ children: ReactNode }, { error?: Error }> {
   override state: { error?: Error } = {}
   static getDerivedStateFromError(error: Error) {
     return { error }
   }
   override componentDidCatch(error: Error) {
-    send({ type: "error", message: error.message })
+    send({ type: "error", message: describe(error) })
   }
   override render() {
     return this.state.error ? null : this.props.children
@@ -79,7 +86,7 @@ async function render(message: Extract<ToFrame, { type: "render" }>) {
     send({ type: "rendered" })
   } catch (error) {
     root?.render(null)
-    send({ type: "error", message: (error as Error).message })
+    send({ type: "error", message: describe(error) })
   }
 }
 
@@ -99,7 +106,7 @@ function evaluateConfig(id: number, code: string) {
       ok: false,
       error:
         error instanceof DOMException && error.name === "DataCloneError"
-          ? "the configuration must be plain data: the playground cannot pass functions to the engine"
+          ? "the configuration must be plain data: Kirana Play cannot pass functions to the engine"
           : (error as Error).message,
     })
   }
@@ -112,13 +119,16 @@ window.addEventListener("message", (event: MessageEvent<ToFrame>) => {
   else if (message.type === "config") evaluateConfig(message.id, message.code)
   else setScheme(message.scheme)
 })
+// The browser's own message is a bare "Uncaught" for some errors: the error
+// itself says more.
 window.addEventListener("error", (event) =>
-  send({ type: "error", message: event.message })
+  send({ type: "error", message: describe(event.error ?? event.message) })
 )
 window.addEventListener("unhandledrejection", (event) =>
-  send({
-    type: "error",
-    message: String((event.reason as Error)?.message ?? event.reason),
-  })
+  send({ type: "error", message: describe(event.reason) })
 )
+// In development, a change to this script reloads the frame rather than
+// running a second copy in it: two React roots on one element tear each
+// other's nodes out. The page renders again when the new frame is ready.
+import.meta.hot?.on("vite:beforeUpdate", () => location.reload())
 send({ type: "ready" })

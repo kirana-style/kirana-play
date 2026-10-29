@@ -1,7 +1,7 @@
 /**
  * The name in the header, as the Kirana site and kirana-ui set their own: the
  * petal K beside the wordmark, "kirana" in Crimson Pro's semibold italic and
- * the product's word after it, light and muted, here "playground" where the
+ * the product's word after it, light and muted, here "play" where the
  * Kirana site writes "style". The K is drawn in one colour, `currentColor`:
  * the favicon's three parts, filled alike.
  */

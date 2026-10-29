@@ -68,7 +68,7 @@ try {
   const text = (await frame?.evaluate(() => document.body.innerText)) ?? ""
   check(
     "the frame renders it",
-    text.includes("Kirana playground"),
+    text.includes("Write a style, read its CSS"),
     text.slice(0, 120)
   )
   const tokenized = await frame?.evaluate(
@@ -118,9 +118,11 @@ try {
   const second = await context.newPage()
   await second.goto(link)
   await settled(second)
-  const restored = await second
-    .locator('[aria-label="card.tsx source"]')
-    .innerText()
+  // CodeMirror draws only the lines in view: go to the end, where the typo is.
+  const source = second.locator('[aria-label="card.tsx source"]')
+  await source.click()
+  await second.keyboard.press("Control+End")
+  const restored = await source.innerText()
   check("a shared link opens the same project", restored.includes("broken"))
 
   // The browser caches the engine's files for good, so ask the Worker directly,
