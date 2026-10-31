@@ -22,6 +22,12 @@ export type Engine = {
   /** The configuration module as CommonJS. */
   config: (source: string) => Promise<string>
   compile: (config: unknown, files: Files) => Promise<CompileOutput>
+  /** Kirana's hover at a place in a module of the last compile, as markdown. */
+  hover: (
+    file: string,
+    line: number,
+    character: number
+  ) => Promise<string | null>
   dispose: () => void
 }
 
@@ -60,6 +66,10 @@ export function startEngine(version: string): Engine {
     config: (source) => send<string>({ type: "config", source }),
     compile: (config, files) =>
       ready.then(() => send<CompileOutput>({ type: "compile", config, files })),
+    hover: (file, line, character) =>
+      ready.then(() =>
+        send<string | null>({ type: "hover", file, line, character })
+      ),
     dispose: () => worker.terminate(),
   }
 }

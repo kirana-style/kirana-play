@@ -4,6 +4,7 @@ import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import type { Sx } from "../lib/sx"
 import { overlayStyles } from "../recipes/overlay"
 import { ctx } from "../theme/context"
+import { tooltipContentMarker } from "../theme/markers"
 import { radius, theme } from "../theme/semantic"
 import { duration } from "../tokens/motion"
 import { spacing } from "../tokens/spacing"
@@ -120,8 +121,12 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           {...props}
-          // No anchor here: what reads it (Kbd) is not in this copy (KF-067).
-          {...styleProps(overlayStyles.popup, styles.content, sx)}
+          {...styleProps(
+            tooltipContentMarker.anchor,
+            overlayStyles.popup,
+            styles.content,
+            sx
+          )}
         >
           {children}
           <TooltipPrimitive.Arrow {...styleProps(styles.arrow)} />

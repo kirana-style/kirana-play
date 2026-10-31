@@ -29,9 +29,11 @@ import {
 } from "@codemirror/view"
 import { css } from "@kirana-style/core"
 
-import type { Diagnostic, Position } from "@/engine/protocol.ts"
+import type { Diagnostic, Position, Summary } from "@/engine/protocol.ts"
 import type { TypeScript } from "@/language/client.ts"
 
+import { kiranaSupport, setSummary } from "./kirana.ts"
+import type { KiranaHover } from "./kirana.ts"
 import { editorTheme, highlighting } from "./theme.ts"
 import { typescriptSupport } from "./typescript.ts"
 
@@ -86,6 +88,12 @@ type Props = {
   reveal?: Position & { at: number }
   /** TypeScript's completion and hovers, for a project's editable files. */
   typescript?: TypeScript
+  /** Kirana's summary and code lenses for this file, from the last compile. */
+  summary?: Summary
+  /** Kirana's hover, from the engine that compiled the file. */
+  kirana?: KiranaHover
+  /** A code lens was clicked: show the compiled CSS. */
+  onShowCss?: () => void
 }
 
 const styles = {
@@ -102,6 +110,9 @@ export function Editor({
   label,
   reveal,
   typescript,
+  summary,
+  kirana,
+  onShowCss,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
@@ -109,6 +120,10 @@ export function Editor({
   const current = useRef(file)
   const change = useRef(onChange)
   change.current = onChange
+  const hover = useRef(kirana)
+  hover.current = kirana
+  const showCss = useRef(onShowCss)
+  showCss.current = onShowCss
 
   const create = (doc: string) =>
     EditorState.create({
@@ -127,6 +142,15 @@ export function Editor({
         highlightActiveLine(),
         highlightSelectionMatches(),
         lintGutter(),
+        ...(language !== "css" && !readOnly
+          ? [
+              kiranaSupport({
+                file: () => current.current,
+                hover: () => hover.current,
+                open: () => showCss.current?.(),
+              }),
+            ]
+          : []),
         // In the body, so a hover card or the completion list is not clipped
         // by the pane; CodeMirror carries the theme's classes onto it.
         tooltips({ parent: document.body }),
@@ -203,6 +227,16 @@ export function Editor({
       setDiagnostics(editor.state, toLint(editor.state.doc, diagnostics ?? []))
     )
   }, [diagnostics, value, file])
+
+  // Kirana's summary, when it was computed for the text on screen. While the
+  // next compile runs, the one shown follows the edits.
+  useEffect(() => {
+    const editor = view.current
+    if (!editor) return
+    if (!summary) editor.dispatch({ effects: setSummary.of(null) })
+    else if (summary.source === editor.state.doc.toString())
+      editor.dispatch({ effects: setSummary.of(summary) })
+  }, [summary, value, file])
 
   useEffect(() => {
     const editor = view.current

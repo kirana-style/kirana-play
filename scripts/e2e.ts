@@ -3,7 +3,7 @@
  * serves the page, the engine of the version it opens with compiles the
  * starter, the CSS pane shows its layers, the sandboxed frame renders it, a
  * typo shows as a problem, a shared link opens the same project, and the
- * editor's TypeScript completes a token.
+ * editor shows Kirana's summary after `sx` and TypeScript's completions.
  *
  *   vp run build && bunx wrangler dev --port 8787 &
  *   bun scripts/e2e.ts                     # http://localhost:8787/
@@ -79,6 +79,14 @@ try {
     "the stylesheet reaches the frame",
     tokenized === "14px",
     String(tokenized)
+  )
+
+  // Kirana's language server: the summary after `sx={…}` in the editor.
+  const hints = await page.locator(".cm-kirana-hint").allInnerTexts()
+  check(
+    "Kirana's summary follows sx",
+    hints.some((hint) => hint.includes("grid")),
+    hints.slice(0, 3).join(" / ")
   )
 
   await page.getByRole("tab", { name: "CSS" }).click()
