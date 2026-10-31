@@ -49,8 +49,11 @@ export const commandItemMarker = relation("commandItem")
 export const commandShortcutMarker = relation("commandShortcut")
 export const dialogContentMarker = relation("dialogContent")
 export const drawerPopupMarker = relation("drawerPopup")
-// dropdownMenuContent and tooltipContent are left out of this copy: their
-// readers (Item, Kbd) are not here (KF-067).
+// Optional in this copy: what reads them (Item, Kbd) is not copied, and an
+// optional relation anchored without readers is not reported (KF-067, 0.3.6).
+export const dropdownMenuContentMarker = relation("dropdownMenuContent", {
+  optional: true,
+})
 export const fieldLabelMarker = relation("fieldLabel")
 export const fieldMarker = relation("field")
 export const inputGroupMarker = relation("inputGroup")
@@ -67,3 +70,6 @@ export const sidebarMarker = relation("sidebar")
 export const switchMarker = relation("switch")
 export const tabsListMarker = relation("tabsList")
 export const tabsMarker = relation("tabs")
+export const tooltipContentMarker = relation("tooltipContent", {
+  optional: true,
+})

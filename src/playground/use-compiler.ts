@@ -4,7 +4,7 @@
  * user's code), handed to the engine with the files, and what comes back is
  * rendered in the frame.
  */
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { startEngine } from "@/engine/client.ts"
 import type { Engine } from "@/engine/client.ts"
@@ -142,5 +142,12 @@ export function useCompiler(
     return () => clearTimeout(timer)
   }, [files, frame, version])
 
-  return { status, output }
+  /** Kirana's hover in a module of the last compile, from the current engine. */
+  const hover = useCallback(
+    (file: string, line: number, character: number) =>
+      engine.current?.hover(file, line, character) ?? Promise.resolve(null),
+    []
+  )
+
+  return { status, output, hover }
 }

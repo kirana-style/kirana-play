@@ -147,6 +147,60 @@ export const editorTheme = EditorView.theme({
   ".cm-ts-className, .cm-ts-interfaceName, .cm-ts-aliasName, .cm-ts-enumName, .cm-ts-typeParameterName":
     { color: "light-dark(#953800, #ffa657)" },
   ".cm-ts-punctuation, .cm-ts-operator": { color: muted },
+  // Kirana's summary after `sx={…}`, its code lens and its hover (`kirana.ts`),
+  // each group of properties in a colour of the code's palette.
+  ".cm-kirana-hint": {
+    marginInlineStart: "1.5ch",
+    fontSize: "12px",
+    color: muted,
+    whiteSpace: "nowrap",
+  },
+  ".cm-kirana-layout": { color: "light-dark(#0550ae, #79c0ff)" },
+  ".cm-kirana-box": { color: "light-dark(#116329, #7ee787)" },
+  ".cm-kirana-size": { color: "light-dark(#1b7c83, #76e3ea)" },
+  ".cm-kirana-colour": { color: "light-dark(#953800, #ffa657)" },
+  ".cm-kirana-type": { color: "light-dark(#7d4e00, #e3b341)" },
+  ".cm-kirana-border": { color: "light-dark(#8250df, #d2a8ff)" },
+  ".cm-kirana-lens": { lineHeight: "1.4", paddingBlockStart: "0.25rem" },
+  ".cm-kirana-lens > button": {
+    padding: 0,
+    border: "none",
+    background: "none",
+    color: muted,
+    fontFamily:
+      '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
+    fontSize: "11.5px",
+    cursor: "pointer",
+  },
+  ".cm-kirana-lens > button:hover": {
+    color: accent,
+    textDecoration: "underline",
+    textUnderlineOffset: "2px",
+  },
+  ".cm-kirana-hover": {
+    display: "grid",
+    gap: "0.375rem",
+    maxWidth: "36rem",
+    padding: "0.5rem 0.75rem",
+    fontFamily:
+      '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
+    fontSize: "12.5px",
+    lineHeight: "1.5",
+  },
+  ".cm-kirana-hover p": { margin: 0 },
+  ".cm-kirana-hover pre, .cm-kirana-hover code, .cm-kirana-hover td": {
+    fontFamily:
+      '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: "12px",
+  },
+  // The box drawing's lines meet only without leading.
+  ".cm-kirana-hover pre": { margin: 0, whiteSpace: "pre", lineHeight: 1.2 },
+  ".cm-kirana-hover table": { borderCollapse: "collapse" },
+  ".cm-kirana-hover td": {
+    padding: "0.0625rem 1rem 0.0625rem 0",
+    verticalAlign: "top",
+  },
+  ".cm-kirana-hover strong": { fontWeight: 600 },
   ".cm-ts-doc": {
     margin: "0.5rem 0 0",
     maxWidth: "32rem",

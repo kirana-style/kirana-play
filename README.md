@@ -10,6 +10,8 @@ writes for it, compiled in your browser by the released engine. It will answer a
   it, and the diagnostics in the gutter and under the editor, as the language server shows them.
 - **TypeScript in the editor:** completion as you type and hover types, from TypeScript 6 in a worker,
   with React's types and Kirana's own, so `color.` lists your tokens and `display: "` its values.
+- **Kirana's language server in the editor:** the summary of what an element receives after `sx={…}`,
+  each `css()` and `recipe()`'s counts above it, and the resolved properties on hover.
 - **A live preview**, in a sandboxed frame.
 - **Any release** of Kirana with a browser engine, chosen in the footer.
 - **Share** puts the whole project in the link's fragment: nothing is stored on a server.

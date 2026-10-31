@@ -5,6 +5,7 @@ import { ArrowRight01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import type { Sx } from "../lib/sx"
 import { menuItem, menuStyles } from "../recipes/menu"
 import { overlayStyles } from "../recipes/overlay"
+import { dropdownMenuContentMarker } from "../theme/markers"
 import { Icon } from "../primitives/icon"
 
 const styles = {
@@ -53,10 +54,8 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           {...props}
-          // No anchor here: what reads it (Item) is not in this copy, and an
-          // anchor nothing reads fails relation-unused even when optional
-          // (KF-067). Restore it with the reader.
           {...styleProps(
+            dropdownMenuContentMarker.anchor,
             overlayStyles.popup,
             menuStyles.content,
             menuStyles.glass,

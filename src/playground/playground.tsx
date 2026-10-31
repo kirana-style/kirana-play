@@ -151,7 +151,7 @@ export function Playground() {
   // completion or hover; it reads every file so imports between them resolve.
   const typescript = useMemo(() => startTypeScript(), [])
   useEffect(() => typescript.sync(files), [files, typescript])
-  const { status, output } = useCompiler(version, files, frame)
+  const { status, output, hover } = useCompiler(version, files, frame)
 
   useEffect(() => {
     fetch("/engine/versions")
@@ -349,6 +349,9 @@ export function Playground() {
                 diagnostics={diagnostics.filter((d) => d.file === active.name)}
                 reveal={reveal}
                 typescript={typescript}
+                summary={output?.summaries?.[active.name]}
+                kirana={hover}
+                onShowCss={() => setTab("css")}
                 onChange={(code) =>
                   update({
                     ...project,
