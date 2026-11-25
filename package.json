@@ -50,7 +50,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
-    "kirana-style": "0.4.1",
+    "kirana-style": "0.4.2",
     "playwright": "1.65.1",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
