@@ -113,6 +113,40 @@ try {
     hints.slice(0, 3).join(" / ")
   )
 
+  // Kirana's style card on hover, as VS Code shows it: the box model drawn.
+  const title = await page.evaluate(() => {
+    const root = document.querySelector('[aria-label="app.tsx source"]')!
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.parentElement!.closest(".cm-kirana-hint, .cm-kirana-lens"))
+        continue
+      const found = node.textContent!.indexOf("title")
+      if (found < 0) continue
+      const range = document.createRange()
+      range.setStart(node, found)
+      range.setEnd(node, found + 5)
+      const { x, y, height } = range.getBoundingClientRect()
+      return { x, y: y + height / 2 }
+    }
+    return null
+  })
+  if (title) {
+    await page.mouse.move(title.x + 2, title.y)
+    await page.mouse.move(title.x + 6, title.y, { steps: 3 })
+  }
+  const card = page.locator(".cm-kirana-hover")
+  await card
+    .first()
+    .waitFor({ timeout: 10_000 })
+    .catch(() => undefined)
+  const drawn = await card.locator('img[alt="style"]').count()
+  check(
+    "the style card draws the box model",
+    drawn > 0,
+    (await card.allInnerTexts()).join(" ").slice(0, 160)
+  )
+  await page.mouse.move(0, 0)
+
   await page.getByRole("tab", { name: "CSS" }).click()
   const css = await page.locator('[aria-label="Compiled CSS"]').innerText()
   check(
