@@ -23,8 +23,39 @@ export type Hint = Place & {
 /** The code lens on a `css()` or `recipe()`: its counts, and how many elements use it. */
 export type Lens = Place & { title: string }
 
-/** A module's summary and code lenses, for the text they were computed from. */
-export type Summary = { source: string; hints: Hint[]; lenses: Lens[] }
+/** A colour literal or a colour token, and the colour it is (`rgb(…)`). */
+export type Swatch = Place & { css: string }
+
+/** A quick fix for a diagnostic: the edits that apply it. */
+export type Fix = Place & {
+  /** The diagnostic's code (`KRN1203`), with `line` and `character` where it starts. */
+  code: string
+  title: string
+  edits: { start: Place; end: Place; text: string }[]
+}
+
+/** A module's summary, lenses, swatches and fixes, for the text they were computed from. */
+export type Summary = {
+  source: string
+  hints: Hint[]
+  lenses: Lens[]
+  swatches: Swatch[]
+  fixes: Fix[]
+}
+
+/** A completion from Kirana's language server: condition keys, `select.`, utility strings. */
+export type KiranaCompletion = {
+  label: string
+  detail?: string
+  /** LSP's `CompletionItemKind`. */
+  kind?: number
+  sortText?: string
+  from: Place
+  to: Place
+  insert: string
+  /** `insert` holds snippet placeholders (`$1`, `${1:state}`). */
+  snippet: boolean
+}
 
 export type CompileOutput = {
   /** Each module as Kirana rewrote it, still TypeScript and JSX. */
@@ -33,6 +64,8 @@ export type CompileOutput = {
   modules: Record<string, string>
   /** The stylesheet. */
   css: string
+  /** The stylesheet minified, as a production build writes it. */
+  minified: string
   diagnostics: Diagnostic[]
   /** How long the compile took in the worker, in milliseconds. */
   ms: number
@@ -50,6 +83,8 @@ export type EngineRequest =
   | { id: number; type: "compile"; config: unknown; files: Files }
   /** Kirana's hover at a place in a module, as markdown. */
   | ({ id: number; type: "hover"; file: string } & Place)
+  /** Kirana's completions at a place in a module, with its text as typed. */
+  | ({ id: number; type: "complete"; file: string; code: string } & Place)
 
 export type EngineResponse =
   | { id: number; ok: true; value: unknown }

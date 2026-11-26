@@ -161,6 +161,15 @@ export const editorTheme = EditorView.theme({
   ".cm-kirana-colour": { color: "light-dark(#953800, #ffa657)" },
   ".cm-kirana-type": { color: "light-dark(#7d4e00, #e3b341)" },
   ".cm-kirana-border": { color: "light-dark(#8250df, #d2a8ff)" },
+  ".cm-kirana-swatch": {
+    display: "inline-block",
+    width: "0.75em",
+    height: "0.75em",
+    marginInlineEnd: "0.3em",
+    verticalAlign: "-0.05em",
+    borderRadius: "2px",
+    boxShadow: "0 0 0 1px light-dark(oklch(0 0 0 / 18%), oklch(1 0 0 / 22%))",
+  },
   ".cm-kirana-lens": { lineHeight: "1.4", paddingBlockStart: "0.25rem" },
   ".cm-kirana-lens > button": {
     padding: 0,
@@ -201,6 +210,13 @@ export const editorTheme = EditorView.theme({
     verticalAlign: "top",
   },
   ".cm-kirana-hover strong": { fontWeight: 600 },
+  ".cm-ts-doc p": { margin: "0 0 0.375rem" },
+  ".cm-ts-doc code": {
+    fontFamily:
+      '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: "11.5px",
+  },
+  ".cm-ts-doc strong": { fontWeight: 600 },
   ".cm-ts-doc": {
     margin: "0.5rem 0 0",
     maxWidth: "32rem",

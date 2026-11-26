@@ -53,12 +53,12 @@
     "kirana-style": "0.4.2",
     "playwright": "1.65.1",
     "typescript": "^7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
-    "vite-plus": "1.4.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001",
+    "vite-plus": "1.8.0",
     "wrangler": "^4.166.0"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001"
   },
   "packageManager": "bun@1.4.3",
   "engines": {

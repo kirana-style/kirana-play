@@ -149,5 +149,13 @@ export function useCompiler(
     []
   )
 
-  return { status, output, hover }
+  /** Kirana's completions in a module, from the current engine. */
+  const complete = useCallback(
+    (file: string, code: string, line: number, character: number) =>
+      engine.current?.complete(file, code, line, character) ??
+      Promise.resolve([]),
+    []
+  )
+
+  return { status, output, hover, complete }
 }

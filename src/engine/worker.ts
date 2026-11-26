@@ -16,9 +16,12 @@ import type {
   EngineRequest,
   EngineResponse,
   Files,
+  Fix,
   Hint,
+  KiranaCompletion,
   Lens,
   Summary,
+  Swatch,
 } from "./protocol.ts"
 
 type BrowserEngine = typeof Kirana
@@ -94,9 +97,10 @@ function compile(config: KiranaConfig, files: Files) {
     compiled,
     modules,
     css,
+    minified: current.stylesheet(true),
     diagnostics,
     ms,
-    summaries: summariesOf(current, files),
+    summaries: summariesOf(current, files, diagnostics),
   }
 }
 
@@ -108,6 +112,45 @@ type LspHint = {
   data?: { parts?: { text: string; group: string }[] }
 }
 type LspLens = { range: { start: LspPlace }; command?: { title: string } }
+type LspRange = { start: LspPlace; end: LspPlace }
+type LspColour = {
+  range: LspRange
+  color: { red: number; green: number; blue: number; alpha: number }
+}
+type LspAction = {
+  kind?: string
+  edit?: { changes?: Record<string, { range: LspRange; newText: string }[]> }
+  title: string
+}
+type LspCompletion = {
+  label: string
+  detail?: string
+  kind?: number
+  sortText?: string
+  insertTextFormat?: number
+  textEdit?: { range: LspRange; newText: string }
+}
+
+/** LSP's item kinds for a value and a colour: TypeScript offers those already. */
+const VALUE_KINDS = new Set([12, 16])
+
+const css = ({ red, green, blue, alpha }: LspColour["color"]) =>
+  `rgb(${Math.round(red * 255)} ${Math.round(green * 255)} ${Math.round(blue * 255)} / ${alpha})`
+
+/** Where an engine diagnostic sits, as the language server counts. */
+const lspRange = (diagnostic: Diagnostic): LspRange | undefined =>
+  diagnostic.start && diagnostic.end
+    ? {
+        start: {
+          line: diagnostic.start.line - 1,
+          character: diagnostic.start.column - 1,
+        },
+        end: {
+          line: diagnostic.end.line - 1,
+          character: diagnostic.end.column - 1,
+        },
+      }
+    : undefined
 
 /**
  * Each module's summary after `sx={…}` and code lenses on `css()`, from
@@ -116,7 +159,8 @@ type LspLens = { range: { start: LspPlace }; command?: { title: string } }
  */
 function summariesOf(
   current: Project,
-  files: Files
+  files: Files,
+  diagnostics: Diagnostic[]
 ): Record<string, Summary> | undefined {
   const language = (current as Partial<Project>).language
   if (!language) return undefined
@@ -134,6 +178,44 @@ function summariesOf(
       const lenses = language.request("textDocument/codeLens", {
         textDocument,
       }) as LspLens[] | null
+      const colours = language.request("textDocument/documentColor", {
+        textDocument,
+      }) as LspColour[] | null
+      // A diagnostic the server can repair (`width: 5` → `"5px"`, a
+      // misspelt property) carries its quick fix to the editor.
+      const fixes = diagnostics.flatMap((diagnostic): Fix[] => {
+        const range = lspRange(diagnostic)
+        if (diagnostic.file !== file || !range) return []
+        const actions = language.request("textDocument/codeAction", {
+          textDocument,
+          range,
+          context: {
+            diagnostics: [
+              {
+                range,
+                message: diagnostic.message,
+                data: { code: diagnostic.code },
+              },
+            ],
+          },
+        }) as LspAction[] | null
+        const fix = actions?.find((action) => action.kind === "quickfix")
+        const edits = fix && Object.values(fix.edit?.changes ?? {}).flat()
+        return fix && edits?.length
+          ? [
+              {
+                ...range.start,
+                code: diagnostic.code,
+                title: fix.title,
+                edits: edits.map((change) => ({
+                  start: change.range.start,
+                  end: change.range.end,
+                  text: change.newText,
+                })),
+              },
+            ]
+          : []
+      })
       summaries[file] = {
         source: files[file]!,
         hints: (hints ?? []).map((hint): Hint => ({
@@ -146,12 +228,57 @@ function summariesOf(
             ? [{ ...lens.range.start, title: lens.command.title }]
             : []
         ),
+        swatches: (colours ?? []).map((colour): Swatch => ({
+          ...colour.range.start,
+          css: css(colour.color),
+        })),
+        fixes,
       }
     } catch {
       // The editor goes without this file's summary.
     }
   }
   return summaries
+}
+
+/**
+ * Kirana's completions where TypeScript has none: condition keys (`":hover"`,
+ * `"@media (…)"`), `select.`'s targets and utility strings. The text as typed
+ * is written first, since the last compile may be a keystroke behind.
+ */
+function completionsAt(
+  file: string,
+  code: string,
+  line: number,
+  character: number
+): KiranaCompletion[] {
+  const language = (project as Partial<Project> | undefined)?.language
+  if (!project || !language) return []
+  if (written.get(file) !== code) {
+    project.write(file, code)
+    written.set(file, code)
+  }
+  const result = language.request("textDocument/completion", {
+    textDocument: { uri: language.uri(file) },
+    position: { line, character },
+  }) as LspCompletion[] | { items: LspCompletion[] } | null
+  const items = Array.isArray(result) ? result : (result?.items ?? [])
+  return items.flatMap((item): KiranaCompletion[] =>
+    item.textEdit && !VALUE_KINDS.has(item.kind ?? 0)
+      ? [
+          {
+            label: item.label,
+            detail: item.detail,
+            kind: item.kind,
+            sortText: item.sortText,
+            from: item.textEdit.range.start,
+            to: item.textEdit.range.end,
+            insert: item.textEdit.newText,
+            snippet: item.insertTextFormat === 2,
+          },
+        ]
+      : []
+  )
 }
 
 /** Kirana's hover as markdown, or null where it has nothing to say. */
@@ -191,6 +318,13 @@ async function handle(request: EngineRequest): Promise<unknown> {
     }
     case "config":
       return commonJs(request.source, "kirana.config.ts")
+    case "complete":
+      return completionsAt(
+        request.file,
+        request.code,
+        request.line,
+        request.character
+      )
     case "hover":
       return hoverAt(request.file, request.line, request.character)
     case "compile":

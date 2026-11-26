@@ -151,7 +151,7 @@ export function Playground() {
   // completion or hover; it reads every file so imports between them resolve.
   const typescript = useMemo(() => startTypeScript(), [])
   useEffect(() => typescript.sync(files), [files, typescript])
-  const { status, output, hover } = useCompiler(version, files, frame)
+  const { status, output, hover, complete } = useCompiler(version, files, frame)
 
   useEffect(() => {
     fetch("/engine/versions")
@@ -220,6 +220,22 @@ export function Playground() {
       })
       .catch(() => undefined)
   }
+
+  // Ctrl+S or Cmd+S keeps the project as a playground can: in its link. The
+  // listener stays for the page's life and calls the latest `share`.
+  const shareRef = useRef(share)
+  useEffect(() => {
+    shareRef.current = share
+  })
+  useEffect(() => {
+    const save = (event: KeyboardEvent) => {
+      if (event.key !== "s" || !(event.ctrlKey || event.metaKey)) return
+      event.preventDefault()
+      shareRef.current()
+    }
+    window.addEventListener("keydown", save)
+    return () => window.removeEventListener("keydown", save)
+  }, [])
 
   const drag = (event: PointerEvent<HTMLDivElement>) => {
     const box = panes.current!.getBoundingClientRect()
@@ -351,6 +367,7 @@ export function Playground() {
                 typescript={typescript}
                 summary={output?.summaries?.[active.name]}
                 kirana={hover}
+                complete={complete}
                 onShowCss={() => setTab("css")}
                 onChange={(code) =>
                   update({

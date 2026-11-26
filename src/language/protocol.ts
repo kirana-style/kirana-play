@@ -24,6 +24,15 @@ export type Completions = { entries: Completion[] }
 
 export type Details = { signature: Part[]; documentation: string }
 
+/** An error or warning TypeScript reports in a file. */
+export type Problem = {
+  start: number
+  end: number
+  message: string
+  severity: "error" | "warning" | "info"
+  code: number
+}
+
 export type Hover = {
   start: number
   end: number
@@ -45,6 +54,7 @@ export type LanguageRequest =
       data?: unknown
     } & At)
   | ({ id: number; type: "hover" } & At)
+  | ({ id: number; type: "problems" } & Omit<At, "offset">)
 
 export type LanguageResponse =
   | { id: number; ok: true; value: unknown }

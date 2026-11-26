@@ -6,15 +6,19 @@ writes for it, compiled in your browser by the released engine. It will answer a
 
 - **A project, not a snippet:** components, tokens and `kirana.config.ts` in their own files,
   importing each other as on disk.
-- **What the compiler says:** the stylesheet by layer with its size, each module as Kirana rewrites
-  it, and the diagnostics in the gutter and under the editor, as the language server shows them.
-- **TypeScript in the editor:** completion as you type and hover types, from TypeScript 6 in a worker,
-  with React's types and Kirana's own, so `color.` lists your tokens and `display: "` its values.
+- **What the compiler says:** the stylesheet by layer with its size, minified or not, each module as
+  Kirana rewrites it, and the diagnostics in the gutter and under the editor, with a quick fix where
+  Kirana has one (`width: 5` → `"5px"`, a misspelt property).
+- **TypeScript in the editor:** completion as you type, hover types and errors, from TypeScript 6 in
+  a worker, with React's types and Kirana's own, so `color.` lists your tokens and `display: "` its
+  values.
 - **Kirana's language server in the editor:** the summary of what an element receives after `sx={…}`,
-  each `css()` and `recipe()`'s counts above it, and the resolved properties on hover.
+  each `css()` and `recipe()`'s counts above it, the resolved properties on hover, a swatch beside
+  each colour, and completions for condition keys (`":hover"`, `"@media (…)"`) and `select.`.
 - **A live preview**, in a sandboxed frame.
 - **Any release** of Kirana with a browser engine, chosen in the footer.
-- **Share** puts the whole project in the link's fragment: nothing is stored on a server.
+- **Share** (or Ctrl+S, Cmd+S) puts the whole project in the link's fragment: nothing is stored on a
+  server.
 
 ## Running it
 
