@@ -18,6 +18,10 @@ export type Completion = {
   /** What `details` needs to find this entry again. */
   source?: string
   data?: unknown
+  /** Marked `@deprecated` (csstype's `boxAlign`, `clip` …). */
+  deprecated?: boolean
+  /** A string value offered at a value position, inserted with its quotes. */
+  quoted?: boolean
 }
 
 export type Completions = { entries: Completion[] }
@@ -45,7 +49,11 @@ type At = { file: string; code: string; offset: number }
 
 export type LanguageRequest =
   | { id: number; type: "sync"; files: Files }
-  | ({ id: number; type: "completions" } & At)
+  /**
+   * `valueStart` is where the word being typed starts when the cursor is at a
+   * value (`color: |`): the string values the property takes are offered too.
+   */
+  | ({ id: number; type: "completions"; valueStart?: number } & At)
   | ({
       id: number
       type: "details"

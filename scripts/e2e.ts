@@ -215,6 +215,23 @@ try {
   )
   await page.keyboard.press("Escape")
 
+  // At a property's value with no quote yet, the property's values come
+  // first, quoted.
+  await page.keyboard.type("hue")
+  await page.keyboard.press("Escape")
+  await page.keyboard.type("\nconst value = css({ display: g")
+  await completions
+    .first()
+    .waitFor({ timeout: 30_000 })
+    .catch(() => undefined)
+  const values = await completions.allInnerTexts()
+  check(
+    "a value offers the property's values",
+    values[0]?.includes('"grid"') ?? false,
+    values.slice(0, 5).join(", ")
+  )
+  await page.keyboard.press("Escape")
+
   check("no page errors", errors.length === 0, errors.join("; "))
 } finally {
   await browser.close()

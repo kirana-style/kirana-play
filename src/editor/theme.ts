@@ -123,6 +123,10 @@ export const editorTheme = EditorView.theme({
       "light-dark(oklch(0.5 0.09 185 / 14%), oklch(0.82 0.1 185 / 18%))",
     color: "inherit",
   },
+  ".cm-completion-deprecated .cm-completionLabel": {
+    textDecoration: "line-through",
+    opacity: 0.6,
+  },
   ".cm-completionIcon": { opacity: 0.6, width: "1.25em" },
   ".cm-completionMatchedText": { textDecoration: "none", fontWeight: 700 },
   ".cm-tooltip.cm-completionInfo": { padding: 0, maxWidth: "32rem" },

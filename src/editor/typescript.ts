@@ -82,6 +82,33 @@ function card(parts: Part[], documentation: string): HTMLElement {
   return dom
 }
 
+/**
+ * The order an option takes, as VS Code orders TypeScript's: by its
+ * `sortText` (a deprecated entry's starts with `z`, so it comes last), then by
+ * name. A property's string values come first; among them the lowercase CSS
+ * keywords before the capitalised system colours (`AccentColor`), and a
+ * vendor-prefixed one (`-webkit-box`) last.
+ */
+function rank(entry: {
+  name: string
+  sortText: string
+  quoted?: boolean
+  kind: string
+}): string {
+  const value = entry.quoted || entry.kind === "string"
+  const group = !value
+    ? ""
+    : entry.name.startsWith("-")
+      ? "2"
+      : /^[A-Z]/.test(entry.name)
+        ? "1"
+        : "0"
+  return `${entry.quoted ? "0" : "1"}${entry.sortText}${group}${entry.name.toLowerCase()}`
+}
+
+/** The options TypeScript marks deprecated, drawn struck through. */
+const deprecated = new WeakSet<Completion>()
+
 export function typescriptSupport(
   service: TypeScript,
   file: () => string,
@@ -97,23 +124,47 @@ export function typescriptSupport(
     if (!context.explicit && !word?.text && !/[."'/]/.test(before)) return null
     const code = context.state.doc.toString()
     const name = file()
-    const { entries } = await service.completions(name, code, context.pos)
+    // At a property's value with no quote yet (`color: |`, `color: cu|`), the
+    // values the property takes are asked for as well.
+    const line = context.state.doc.lineAt(context.pos)
+    const typed = line.text.slice(0, context.pos - line.from)
+    const inString = ['"', "'", "`"].some(
+      (quote) => typed.split(quote).length % 2 === 0
+    )
+    const atValue = !inString && /:\s*[\w$-]*$/.test(typed)
+    const { entries } = await service.completions(
+      name,
+      code,
+      context.pos,
+      atValue ? (word?.from ?? context.pos) : undefined
+    )
     if (context.aborted || entries.length === 0) return null
-    const replace = entries.find((entry) => entry.replace)?.replace
+    const replace = entries.find(
+      (entry) => entry.replace && !entry.quoted
+    )?.replace
     const options: Completion[] = entries.map((entry) => ({
       label: entry.name,
+      // A quoted value shows its quotes, and matches what is typed without them.
+      displayLabel: entry.quoted ? JSON.stringify(entry.name) : undefined,
       type: typeOf(entry.kind),
       apply: entry.insertText ?? entry.name,
-      // TypeScript ranks by sortText, lowest first ("11" before "15"); a
-      // vendor-prefixed value (`-webkit-box`) goes after every other.
-      boost: entry.name.startsWith("-")
-        ? -99
-        : -Math.min(Number.parseInt(entry.sortText, 10) || 0, 98),
-      info: async () => {
-        const details = await service.details(name, code, context.pos, entry)
-        return details ? card(details.signature, details.documentation) : null
-      },
+      sortText: rank(entry),
+      info: entry.quoted
+        ? undefined
+        : async () => {
+            const details = await service.details(
+              name,
+              code,
+              context.pos,
+              entry
+            )
+            return details
+              ? card(details.signature, details.documentation)
+              : null
+          },
     }))
+    for (const [index, entry] of entries.entries())
+      if (entry.deprecated) deprecated.add(options[index]!)
     return {
       from: replace?.start ?? word?.from ?? context.pos,
       to: replace?.end,
@@ -123,7 +174,11 @@ export function typescriptSupport(
   }
 
   return [
-    autocompletion({ override: [complete, ...also] }),
+    autocompletion({
+      override: [complete, ...also],
+      optionClass: (option) =>
+        deprecated.has(option) ? "cm-completion-deprecated" : "",
+    }),
     hoverTooltip(
       async (view, pos) => {
         const info = await service.hover(file(), view.state.doc.toString(), pos)
