@@ -11,6 +11,8 @@ import { tags } from "@lezer/highlight"
 
 const muted = "light-dark(oklch(0.5 0.014 70), oklch(0.72 0.012 80))"
 const accent = "light-dark(oklch(0.5 0.09 185), oklch(0.82 0.1 185))"
+/** The panes' ground (`color.card`), so a line scrolled sideways passes under the gutter. */
+const card = "light-dark(oklch(0.997 0.002 85), oklch(0.2 0.009 70))"
 
 export const editorTheme = EditorView.theme({
   "&": {
@@ -33,7 +35,7 @@ export const editorTheme = EditorView.theme({
     borderLeftWidth: "2px",
   },
   ".cm-gutters": {
-    backgroundColor: "transparent",
+    backgroundColor: card,
     color: muted,
     border: "none",
     paddingInlineStart: "0.25rem",

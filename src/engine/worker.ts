@@ -93,11 +93,20 @@ function compile(config: KiranaConfig, files: Files) {
   const css = current.stylesheet(false)
   // The compile's own time; the summaries below are the editor's, not its.
   const ms = performance.now() - started
+  // A production build in a session of its own (0.4.3 and later). The
+  // readable output above stands without it.
+  let production: ReturnType<Project["production"]> | undefined
+  try {
+    production = (current as Partial<Project>).production?.()
+  } catch {
+    production = undefined
+  }
   return {
     compiled,
     modules,
     css,
     minified: current.stylesheet(true),
+    production,
     diagnostics,
     ms,
     summaries: summariesOf(current, files, diagnostics),

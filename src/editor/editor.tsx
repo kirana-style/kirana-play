@@ -231,6 +231,8 @@ export function Editor({
         ...(readOnly
           ? [EditorState.readOnly.of(true), EditorView.editable.of(false)]
           : []),
+        // A minified stylesheet is one line: wrapped, it reads without scrolling.
+        ...(readOnly && language === "css" ? [EditorView.lineWrapping] : []),
         // Only what the person typed: a value written in from outside (an
         // example, a shared link) is not an edit of theirs.
         EditorView.updateListener.of((update) => {

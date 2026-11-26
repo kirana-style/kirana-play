@@ -119,13 +119,48 @@ const styles = {
   module: css({ fontFamily: font.mono }),
 }
 
-function CssView({ css: full, minified }: { css: string; minified: string }) {
+/**
+ * The output as a production build ships it, when the engine can write it
+ * (0.4.3 and later): dense names, the stylesheet minified, the tokens nothing
+ * names left out. An older engine minifies with the readable names.
+ */
+type Shipped = {
+  on: boolean
+  set: (on: boolean) => void
+  production: Compiled["production"]
+}
+
+function ShippedToggle({ shipped }: { shipped: Shipped }) {
+  return (
+    <Toggle
+      size="sm"
+      pressed={shipped.on}
+      onPressedChange={shipped.set}
+      title={
+        shipped.production
+          ? "As a production build ships it: dense names, minified, the tokens nothing names left out"
+          : "Minified, with readable names: this engine cannot write dense names"
+      }
+    >
+      {shipped.production ? "Production" : "Minified"}
+    </Toggle>
+  )
+}
+
+function CssView({
+  css: full,
+  minified,
+  shipped,
+}: {
+  css: string
+  minified: string
+  shipped: Shipped
+}) {
   const [layer, setLayer] = useState("all")
   const [copied, setCopied] = useState(false)
-  // Minified, as a production build writes it, but with the readable class
-  // names: the browser engine has no dense names yet (KF-145).
-  const [small, setSmall] = useState(false)
-  const stylesheet = small ? minified : full
+  const stylesheet = !shipped.on
+    ? full
+    : (shipped.production?.stylesheet ?? minified)
   const layers = useMemo(() => layersOf(stylesheet), [stylesheet])
   const shown =
     layer === "all"
@@ -156,14 +191,7 @@ function CssView({ css: full, minified }: { css: string; minified: string }) {
         <span sx={styles.size}>
           {formatBytes(sizes.raw)} · {formatBytes(sizes.gzip)} gzip
         </span>
-        <Toggle
-          size="sm"
-          pressed={small}
-          onPressedChange={setSmall}
-          title="Minified as a production build writes it, with readable class names"
-        >
-          Minified
-        </Toggle>
+        <ShippedToggle shipped={shipped} />
         <Button
           variant="ghost"
           size="sm"
@@ -191,8 +219,16 @@ function CssView({ css: full, minified }: { css: string; minified: string }) {
   )
 }
 
-function CompiledView({ compiled }: { compiled: Record<string, string> }) {
+function CompiledView({
+  compiled,
+  shipped,
+}: {
+  compiled: Record<string, string>
+  shipped: Shipped
+}) {
   const files = Object.keys(compiled)
+  // A module Kirana did not rewrite ships as it is.
+  const dense = shipped.on ? shipped.production?.modules : undefined
   const [chosen, setChosen] = useState<string>()
   const file = chosen && files.includes(chosen) ? chosen : files[0]
   return (
@@ -215,13 +251,16 @@ function CompiledView({ compiled }: { compiled: Record<string, string> }) {
             ))}
           </SelectContent>
         </Select>
-        <span sx={styles.size}>as Kirana rewrites it</span>
+        <span sx={styles.size}>
+          {dense ? "with a production build's names" : "as Kirana rewrites it"}
+        </span>
+        {shipped.production && <ShippedToggle shipped={shipped} />}
       </div>
       <div sx={styles.editor}>
         {file && (
           <Editor
             file={`compiled:${file}`}
-            value={compiled[file] ?? ""}
+            value={(dense?.[file] ?? compiled[file]) || ""}
             language="tsx"
             readOnly
             label={`${file} compiled`}
@@ -240,6 +279,9 @@ export function OutputPane({
   frameDocument,
   runtimeError,
 }: Props) {
+  // One switch for the CSS and Compiled tabs: names match across them.
+  const [on, set] = useState(false)
+  const shipped: Shipped = { on, set, production: output?.production }
   return (
     <Tabs
       value={tab}
@@ -279,10 +321,14 @@ export function OutputPane({
           )}
         </TabsContent>
         <TabsContent value="css" sx={styles.fill}>
-          <CssView css={output?.css ?? ""} minified={output?.minified ?? ""} />
+          <CssView
+            css={output?.css ?? ""}
+            minified={output?.minified ?? ""}
+            shipped={shipped}
+          />
         </TabsContent>
         <TabsContent value="compiled" sx={styles.fill}>
-          <CompiledView compiled={output?.compiled ?? {}} />
+          <CompiledView compiled={output?.compiled ?? {}} shipped={shipped} />
         </TabsContent>
       </div>
     </Tabs>

@@ -6,8 +6,9 @@ writes for it, compiled in your browser by the released engine. It will answer a
 
 - **A project, not a snippet:** components, tokens and `kirana.config.ts` in their own files,
   importing each other as on disk.
-- **What the compiler says:** the stylesheet by layer with its size, minified or not, each module as
-  Kirana rewrites it, and the diagnostics in the gutter and under the editor, with a quick fix where
+- **What the compiler says:** the stylesheet by layer with its size, each module as Kirana rewrites
+  it, both also as a production build ships them (dense class names, the stylesheet minified, unused
+  tokens left out), and the diagnostics in the gutter and under the editor, with a quick fix where
   Kirana has one (`width: 5` → `"5px"`, a misspelt property).
 - **TypeScript in the editor:** completion as you type, hover types and errors, from TypeScript 6 in
   a worker, with React's types and Kirana's own, so `color.` lists your tokens and `display: "` its
