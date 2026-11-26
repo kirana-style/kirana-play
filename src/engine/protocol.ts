@@ -64,8 +64,14 @@ export type CompileOutput = {
   modules: Record<string, string>
   /** The stylesheet. */
   css: string
-  /** The stylesheet minified, as a production build writes it. */
+  /** The stylesheet minified, with the readable names. */
   minified: string
+  /**
+   * What a production build ships, when the engine can write it (0.4.3 and
+   * later): each rewritten module and the stylesheet with dense names, the
+   * stylesheet minified and the tokens nothing names left out.
+   */
+  production?: { modules: Record<string, string>; stylesheet: string }
   diagnostics: Diagnostic[]
   /** How long the compile took in the worker, in milliseconds. */
   ms: number

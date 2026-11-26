@@ -120,21 +120,35 @@ try {
     css.includes("@layer kirana.atoms"),
     css.slice(0, 120)
   )
-  // Minified, as a production build writes it: the size line shrinks.
+  // As a production build ships it: dense names, so the size line shrinks,
+  // and the Compiled tab's module names the classes the stylesheet defines.
   const size = page.locator("span", { hasText: /gzip$/ }).first()
   const full = await size.innerText()
-  await page.getByRole("button", { name: "Minified" }).click()
+  const production = page.getByRole("button", { name: "Production" })
+  await production.click()
   const small = await size.innerText()
+  const shippedCss = await page
+    .locator('[aria-label="Compiled CSS"]')
+    .innerText()
   const bytes = (line: string) =>
     Number(/^([\d.]+) k?B/.exec(line)?.[1] ?? NaN) *
     (/^[\d.]+ kB/.test(line) ? 1000 : 1)
   check(
-    "the minified stylesheet is smaller",
+    "the production stylesheet is smaller",
     bytes(small) < bytes(full),
     `${full} → ${small}`
   )
-  await page.getByRole("button", { name: "Minified" }).click()
-
+  await page.getByRole("tab", { name: "Compiled" }).click()
+  const shippedModule = await page
+    .locator('[aria-label$=" compiled"]')
+    .innerText()
+  const dense = /className[=:]\s*"([\w-]+)/.exec(shippedModule)?.[1] ?? ""
+  check(
+    "a production module names the production stylesheet's classes",
+    dense !== "" && shippedCss.includes(`.${dense}`),
+    dense || shippedModule.slice(0, 160)
+  )
+  await production.click()
   await page.getByRole("tab", { name: "Preview" }).click()
   await page.getByRole("tab", { name: /card\.tsx/ }).click()
   await page.locator('[aria-label="card.tsx source"]').click()
