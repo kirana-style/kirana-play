@@ -192,6 +192,17 @@ export function Editor({
         indentOnInput(),
         bracketMatching(),
         closeBrackets(),
+        // Before TypeScript's, so a hover shows Kirana's card first, as the
+        // part of it this editor is for.
+        ...(language !== "css" && !readOnly
+          ? [
+              kiranaSupport({
+                file: () => current.current,
+                hover: () => hover.current,
+                open: () => showCss.current?.(),
+              }),
+            ]
+          : []),
         typescript && language !== "css" && !readOnly
           ? typescriptSupport(typescript, () => current.current, [
               kiranaCompletions({
@@ -203,15 +214,6 @@ export function Editor({
         highlightActiveLine(),
         highlightSelectionMatches(),
         lintGutter(),
-        ...(language !== "css" && !readOnly
-          ? [
-              kiranaSupport({
-                file: () => current.current,
-                hover: () => hover.current,
-                open: () => showCss.current?.(),
-              }),
-            ]
-          : []),
         // In the body, so a hover card or the completion list is not clipped
         // by the pane; CodeMirror carries the theme's classes onto it.
         tooltips({ parent: document.body }),

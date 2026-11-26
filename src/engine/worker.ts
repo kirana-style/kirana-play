@@ -22,12 +22,15 @@ import type {
   Lens,
   Summary,
   Swatch,
+  Theme,
 } from "./protocol.ts"
 
 type BrowserEngine = typeof Kirana
 
 let engine: BrowserEngine | undefined
 let project: Project | undefined
+/** The colour scheme the language server last drew for. */
+let theme: Theme = "light"
 const written = new Map<string, string>()
 
 /** CommonJS for the preview frame: types and JSX gone, imports become `require()`. */
@@ -51,8 +54,10 @@ function sync(declared: KiranaConfig, files: Files): Project {
     project = engine!.createProject({
       config,
       // The language server's options, as an editor sends them: a summary
-      // short enough to sit after an element on one line.
-      language: { summaryLength: 72 },
+      // short enough to sit after an element on one line, and the style card
+      // as VS Code shows it, its box model and swatches drawn as images and
+      // its tables side by side. The page runs no commands, so no links to them.
+      language: { summaryLength: 72, images: true, html: true, theme },
     })
     written.clear()
   }
@@ -291,9 +296,13 @@ function completionsAt(
 }
 
 /** Kirana's hover as markdown, or null where it has nothing to say. */
-function hoverAt(file: string, line: number, character: number) {
+function hoverAt(file: string, line: number, character: number, scheme: Theme) {
   const language = (project as Partial<Project> | undefined)?.language
   if (!language) return null
+  if (scheme !== theme) {
+    language.notify("kirana/theme", { theme: scheme })
+    theme = scheme
+  }
   const hover = language.request("textDocument/hover", {
     textDocument: { uri: language.uri(file) },
     position: { line, character },
@@ -335,7 +344,12 @@ async function handle(request: EngineRequest): Promise<unknown> {
         request.character
       )
     case "hover":
-      return hoverAt(request.file, request.line, request.character)
+      return hoverAt(
+        request.file,
+        request.line,
+        request.character,
+        request.theme
+      )
     case "compile":
       if (!engine) throw new Error("the engine is not loaded")
       return compile((request.config ?? {}) as KiranaConfig, request.files)

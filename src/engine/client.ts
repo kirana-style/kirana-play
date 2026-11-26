@@ -8,6 +8,7 @@ import type {
   EngineRequest,
   EngineResponse,
   Files,
+  Theme,
 } from "./protocol.ts"
 
 type Request = EngineRequest extends infer R
@@ -34,7 +35,8 @@ export type Engine = {
   hover: (
     file: string,
     line: number,
-    character: number
+    character: number,
+    theme: Theme
   ) => Promise<string | null>
   dispose: () => void
 }
@@ -84,9 +86,9 @@ export function startEngine(version: string): Engine {
           character,
         })
       ),
-    hover: (file, line, character) =>
+    hover: (file, line, character, theme) =>
       ready.then(() =>
-        send<string | null>({ type: "hover", file, line, character })
+        send<string | null>({ type: "hover", file, line, character, theme })
       ),
     dispose: () => worker.terminate(),
   }

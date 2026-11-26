@@ -8,6 +8,9 @@ import type { Diagnostic } from "@kirana-style/compiler-browser"
 
 export type { Diagnostic, Position } from "@kirana-style/compiler-browser"
 
+/** The page's colour scheme, as the language server draws for it. */
+export type Theme = "light" | "dark"
+
 /** The project's files, by path relative to its root (`app.tsx`, `src/tokens.ts`). */
 export type Files = Readonly<Record<string, string>>
 
@@ -87,8 +90,11 @@ export type EngineRequest =
   /** The configuration module as CommonJS, for the preview frame to evaluate. */
   | { id: number; type: "config"; source: string }
   | { id: number; type: "compile"; config: unknown; files: Files }
-  /** Kirana's hover at a place in a module, as markdown. */
-  | ({ id: number; type: "hover"; file: string } & Place)
+  /**
+   * Kirana's hover at a place in a module, as markdown, its drawings in the
+   * page's colour scheme.
+   */
+  | ({ id: number; type: "hover"; file: string; theme: Theme } & Place)
   /** Kirana's completions at a place in a module, with its text as typed. */
   | ({ id: number; type: "complete"; file: string; code: string } & Place)
 

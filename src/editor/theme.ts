@@ -71,6 +71,12 @@ export const editorTheme = EditorView.theme({
     boxShadow: "0 8px 24px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 50%))",
   },
   ".cm-tooltip-lint": { maxWidth: "36rem" },
+  // Kirana's card and TypeScript's type together can outgrow the screen: one
+  // scroll for both.
+  ".cm-tooltip.cm-tooltip-hover": {
+    maxHeight: "min(36rem, 75vh)",
+    overflowY: "auto",
+  },
   ".cm-diagnostic": {
     fontFamily:
       '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
@@ -192,30 +198,83 @@ export const editorTheme = EditorView.theme({
     textDecoration: "underline",
     textUnderlineOffset: "2px",
   },
+  // The style card, as VS Code shows it: the language server colours each
+  // property by its group with VS Code's chart colours, set here to the
+  // summary's.
   ".cm-kirana-hover": {
+    "--vscode-charts-blue": "light-dark(#0550ae, #79c0ff)",
+    "--vscode-charts-green": "light-dark(#116329, #7ee787)",
+    "--vscode-terminal-ansiCyan": "light-dark(#1b7c83, #76e3ea)",
+    "--vscode-charts-orange": "light-dark(#953800, #ffa657)",
+    "--vscode-charts-yellow": "light-dark(#7d4e00, #e3b341)",
+    "--vscode-charts-purple": "light-dark(#8250df, #d2a8ff)",
+    "--vscode-descriptionForeground": muted,
     display: "grid",
-    gap: "0.375rem",
-    maxWidth: "36rem",
-    padding: "0.5rem 0.75rem",
+    justifyItems: "start",
+    gap: "0.5rem",
+    maxWidth: "min(40rem, calc(100vw - 2rem))",
+    padding: "0.75rem 0.875rem",
     fontFamily:
       '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
-    fontSize: "12.5px",
+    fontSize: "13px",
     lineHeight: "1.5",
   },
   ".cm-kirana-hover p": { margin: 0 },
-  ".cm-kirana-hover pre, .cm-kirana-hover code, .cm-kirana-hover td": {
+  // Inline, as markdown places them: the page's reset makes images blocks.
+  ".cm-kirana-hover img": {
+    display: "inline-block",
+    verticalAlign: "middle",
+    maxWidth: "100%",
+  },
+  // The brand's icon before "Kirana".
+  ".cm-kirana-hover > p:first-child > img:first-child": {
+    marginInlineEnd: "0.25rem",
+    verticalAlign: "-2px",
+  },
+  ".cm-kirana-hover pre, .cm-kirana-hover code": {
     fontFamily:
       '"JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace',
     fontSize: "12px",
   },
-  // The box drawing's lines meet only without leading.
-  ".cm-kirana-hover pre": { margin: 0, whiteSpace: "pre", lineHeight: 1.2 },
-  ".cm-kirana-hover table": { borderCollapse: "collapse" },
-  ".cm-kirana-hover td": {
-    padding: "0.0625rem 1rem 0.0625rem 0",
-    verticalAlign: "top",
+  ".cm-kirana-hover code": {
+    padding: "0.0625rem 0.3125rem",
+    borderRadius: "0.25rem",
+    backgroundColor: "light-dark(oklch(0.962 0.007 85), oklch(0.25 0.01 70))",
   },
+  ".cm-kirana-hover pre": {
+    justifySelf: "stretch",
+    margin: 0,
+    padding: "0.5rem 0.625rem",
+    borderRadius: "0.375rem",
+    whiteSpace: "pre",
+    overflowX: "auto",
+    lineHeight: 1.45,
+    backgroundColor: "light-dark(oklch(0.962 0.007 85), oklch(0.25 0.01 70))",
+  },
+  ".cm-kirana-hover table": { borderCollapse: "collapse" },
+  ".cm-kirana-hover th": {
+    padding: "0 1.25rem 0.375rem 0",
+    textAlign: "start",
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+  },
+  ".cm-kirana-hover td": {
+    padding: "0.125rem 1.25rem 0.125rem 0",
+    verticalAlign: "middle",
+  },
+  // The box model stays at the top beside a recipe's long list.
+  ".cm-kirana-hover td:has(> img:only-child)": { verticalAlign: "top" },
+  // A swatch between a property and its value.
+  ".cm-kirana-hover td img": { marginInline: "0.125rem 0.25rem" },
+  // A condition and a property on one line; the value wraps.
+  ".cm-kirana-hover td:not(:last-child)": { whiteSpace: "nowrap" },
+  ".cm-kirana-hover td:last-child, .cm-kirana-hover th:last-child": {
+    paddingInlineEnd: 0,
+  },
+  // The resolved list beside the box model: one property a line.
+  ".cm-kirana-hover td:has(br)": { lineHeight: 2 },
   ".cm-kirana-hover strong": { fontWeight: 600 },
+  ".cm-kirana-hover em": { color: muted },
   ".cm-ts-doc p": { margin: "0 0 0.375rem" },
   ".cm-ts-doc code": {
     fontFamily:

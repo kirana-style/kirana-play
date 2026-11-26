@@ -24,13 +24,26 @@ import {
 } from "@codemirror/view"
 import type { DecorationSet } from "@codemirror/view"
 
-import type { KiranaCompletion, Place, Summary } from "@/engine/protocol.ts"
+import type {
+  KiranaCompletion,
+  Place,
+  Summary,
+  Theme,
+} from "@/engine/protocol.ts"
 
 export type KiranaHover = (
   file: string,
   line: number,
-  character: number
+  character: number,
+  theme: Theme
 ) => Promise<string | null>
+
+/** The scheme the page shows: the one picked, or the system's. */
+function pageTheme(): Theme {
+  const picked = document.documentElement.dataset.scheme
+  if (picked === "light" || picked === "dark") return picked
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+}
 
 export type KiranaComplete = (
   file: string,
@@ -205,12 +218,46 @@ export function kiranaCompletions(options: {
   }
 }
 
-/** Paragraphs, bold and code spans of the hover's markdown, as text nodes. */
+/**
+ * The pieces of inline markdown a hover writes: an image, a coloured span (the
+ * safe HTML VS Code allows), a line break, code, bold and italics.
+ */
+const INLINE =
+  /(!\[[^\]]*\]\([^)\s]+\)|<span style="color:[^";]+;?">[^<]*<\/span>|<br\s*\/?>|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/
+
+/** An image the page may show: drawn by the language server, so on this origin. */
+const IMAGE = /^data:image\/(?:svg\+xml|png);base64,[\w+/=]+$/
+
+/** A colour a span may take: a literal, or a variable the editor's theme sets. */
+const COLOUR = /^(?:#[\da-f]{3,8}|var\(--[\w-]+\))$/i
+
+/** A hover's inline markdown, as elements: nothing it holds is parsed as HTML. */
 function inline(text: string, parent: HTMLElement) {
-  // Links name commands this page cannot run: their text is kept.
-  const plain = text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-  for (const piece of plain.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/)) {
+  // Links name commands or files this page cannot open: their text is kept.
+  const plain = text.replace(/(?<!!)\[([^\]]*)\]\([^)]*\)/g, "$1")
+  for (const piece of plain.split(INLINE)) {
     if (!piece) continue
+    const image = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(piece)
+    if (image) {
+      if (!IMAGE.test(image[2]!)) continue
+      const img = document.createElement("img")
+      img.alt = image[1]!
+      img.src = image[2]!
+      parent.append(img)
+      continue
+    }
+    const span = /^<span style="color:([^";]+);?">([^<]*)<\/span>$/.exec(piece)
+    if (span) {
+      const node = document.createElement("span")
+      if (COLOUR.test(span[1]!.trim())) node.style.color = span[1]!.trim()
+      node.textContent = span[2]!
+      parent.append(node)
+      continue
+    }
+    if (/^<br\s*\/?>$/.test(piece)) {
+      parent.append(document.createElement("br"))
+      continue
+    }
     const tag = piece.startsWith("`")
       ? "code"
       : piece.startsWith("**")
@@ -228,6 +275,14 @@ function inline(text: string, parent: HTMLElement) {
   }
 }
 
+/** A table row's cells: split at each `|` not escaped, `\|` read as a bar. */
+function cellsOf(row: string): string[] {
+  return row
+    .replace(/^\||\|$/g, "")
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.replace(/\\\|/g, "|").trim())
+}
+
 /**
  * A hover's markdown: paragraphs, fenced code and tables, nothing else.
  * TypeScript's documentation renders here too, without its tables (csstype's
@@ -239,7 +294,7 @@ export function markdown(
 ): HTMLElement {
   const dom = document.createElement("div")
   dom.className = className
-  const lines = source.replace(/<br>/g, "\n").split("\n")
+  const lines = source.split("\n")
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index]!
     if (line.startsWith("```")) {
@@ -251,14 +306,25 @@ export function markdown(
       dom.append(pre)
     } else if (line.startsWith("|")) {
       const table = document.createElement("table")
-      for (; index < lines.length && lines[index]!.startsWith("|"); index++) {
-        const cells = lines[index]!.slice(1, -1).split("|")
-        if (!tables || cells.every((cell) => /^\s*:?-+:?\s*$/.test(cell)))
-          continue
-        const row = table.insertRow()
-        for (const cell of cells) inline(cell.trim(), row.insertCell())
-      }
+      const rows: string[][] = []
+      for (; index < lines.length && lines[index]!.startsWith("|"); index++)
+        rows.push(cellsOf(lines[index]!))
       index--
+      // A header is the row above the `|:--|` line.
+      const rule = rows.findIndex((cells) =>
+        cells.every((cell) => /^:?-+:?$/.test(cell))
+      )
+      if (tables) {
+        rows.forEach((cells, at) => {
+          if (at === rule) return
+          const row = table.insertRow()
+          for (const cell of cells) {
+            const node = document.createElement(at < rule ? "th" : "td")
+            inline(cell, node)
+            row.append(node)
+          }
+        })
+      }
       if (table.rows.length) dom.append(table)
     } else if (line.trim()) {
       const paragraph = document.createElement("p")
@@ -298,7 +364,8 @@ export function kiranaSupport(options: {
         const text = await hover(
           options.file(),
           line.number - 1,
-          pos - line.from
+          pos - line.from,
+          pageTheme()
         ).catch(() => null)
         if (!text) return null
         return {

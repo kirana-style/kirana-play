@@ -9,7 +9,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { startEngine } from "@/engine/client.ts"
 import type { Engine } from "@/engine/client.ts"
 import { CONFIG_FILE, isModule } from "@/engine/protocol.ts"
-import type { CompileOutput, Diagnostic, Files } from "@/engine/protocol.ts"
+import type {
+  CompileOutput,
+  Diagnostic,
+  Files,
+  Theme,
+} from "@/engine/protocol.ts"
 import type { Frame } from "@/preview/frame.ts"
 
 export type Status =
@@ -144,8 +149,9 @@ export function useCompiler(
 
   /** Kirana's hover in a module of the last compile, from the current engine. */
   const hover = useCallback(
-    (file: string, line: number, character: number) =>
-      engine.current?.hover(file, line, character) ?? Promise.resolve(null),
+    (file: string, line: number, character: number, theme: Theme) =>
+      engine.current?.hover(file, line, character, theme) ??
+      Promise.resolve(null),
     []
   )
 
