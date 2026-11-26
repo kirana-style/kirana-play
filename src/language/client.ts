@@ -10,6 +10,7 @@ import type {
   Hover,
   LanguageRequest,
   LanguageResponse,
+  Problem,
 } from "./protocol.ts"
 
 type Request = LanguageRequest extends infer R
@@ -33,6 +34,8 @@ export type TypeScript = {
     entry: { name: string; source?: string; data?: unknown }
   ) => Promise<Details | null>
   hover: (file: string, code: string, offset: number) => Promise<Hover | null>
+  /** TypeScript's errors in a file, as the editor has it. */
+  problems: (file: string, code: string) => Promise<Problem[]>
 }
 
 export function startTypeScript(): TypeScript {
@@ -88,6 +91,7 @@ export function startTypeScript(): TypeScript {
       send<Completions>({ type: "completions", file, code, offset }),
     details: (file, code, offset, entry) =>
       send<Details | null>({ type: "details", file, code, offset, ...entry }),
+    problems: (file, code) => send<Problem[]>({ type: "problems", file, code }),
     hover: (file, code, offset) =>
       send<Hover | null>({ type: "hover", file, code, offset }),
   }

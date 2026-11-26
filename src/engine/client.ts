@@ -4,6 +4,7 @@
  */
 import type {
   CompileOutput,
+  KiranaCompletion,
   EngineRequest,
   EngineResponse,
   Files,
@@ -22,6 +23,13 @@ export type Engine = {
   /** The configuration module as CommonJS. */
   config: (source: string) => Promise<string>
   compile: (config: unknown, files: Files) => Promise<CompileOutput>
+  /** Kirana's completions at a place in a module, with its text as typed. */
+  complete: (
+    file: string,
+    code: string,
+    line: number,
+    character: number
+  ) => Promise<KiranaCompletion[]>
   /** Kirana's hover at a place in a module of the last compile, as markdown. */
   hover: (
     file: string,
@@ -66,6 +74,16 @@ export function startEngine(version: string): Engine {
     config: (source) => send<string>({ type: "config", source }),
     compile: (config, files) =>
       ready.then(() => send<CompileOutput>({ type: "compile", config, files })),
+    complete: (file, code, line, character) =>
+      ready.then(() =>
+        send<KiranaCompletion[]>({
+          type: "complete",
+          file,
+          code,
+          line,
+          character,
+        })
+      ),
     hover: (file, line, character) =>
       ready.then(() =>
         send<string | null>({ type: "hover", file, line, character })

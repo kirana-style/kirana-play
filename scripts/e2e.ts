@@ -25,11 +25,35 @@ function check(what: string, ok: boolean, detail = "") {
 }
 
 /** Waits until the engine has compiled or failed, and returns what the status says. */
+/**
+ * Resolves once the page paints again: two frames under 100 ms apart. A
+ * freshly launched headless Chromium can stop painting its first page for over
+ * a minute (seen on WSL, blank pages included), and Playwright clicks only an
+ * element it has seen in two frames.
+ */
+async function painting(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        let last = performance.now()
+        const tick = (now: number) => {
+          if (now !== last && now - last < 100) resolve()
+          else {
+            last = now
+            requestAnimationFrame(tick)
+          }
+        }
+        requestAnimationFrame(tick)
+      })
+  )
+}
+
 async function settled(page: Page): Promise<{ state: string; text: string }> {
   const status = page.locator(
     '[role="status"][data-state="done"], [role="status"][data-state="failed"]'
   )
   await status.waitFor({ timeout: 90_000 })
+  await painting(page)
   return {
     state: (await status.getAttribute("data-state")) ?? "",
     text: (await status.textContent()) ?? "",
@@ -96,6 +120,20 @@ try {
     css.includes("@layer kirana.atoms"),
     css.slice(0, 120)
   )
+  // Minified, as a production build writes it: the size line shrinks.
+  const size = page.locator("span", { hasText: /gzip$/ }).first()
+  const full = await size.innerText()
+  await page.getByRole("button", { name: "Minified" }).click()
+  const small = await size.innerText()
+  const bytes = (line: string) =>
+    Number(/^([\d.]+) k?B/.exec(line)?.[1] ?? NaN) *
+    (/^[\d.]+ kB/.test(line) ? 1000 : 1)
+  check(
+    "the minified stylesheet is smaller",
+    bytes(small) < bytes(full),
+    `${full} → ${small}`
+  )
+  await page.getByRole("button", { name: "Minified" }).click()
 
   await page.getByRole("tab", { name: "Preview" }).click()
   await page.getByRole("tab", { name: /card\.tsx/ }).click()

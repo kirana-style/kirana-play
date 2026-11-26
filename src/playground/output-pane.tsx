@@ -22,6 +22,7 @@ import {
   TabsTrigger,
 } from "@/ui/components/tabs.tsx"
 import { ToggleGroup, ToggleGroupItem } from "@/ui/components/toggle-group.tsx"
+import { Toggle } from "@/ui/components/toggle.tsx"
 import { Icon } from "@/ui/primitives/icon.tsx"
 
 import { formatBytes, layersOf } from "./stylesheet.ts"
@@ -118,9 +119,13 @@ const styles = {
   module: css({ fontFamily: font.mono }),
 }
 
-function CssView({ css: stylesheet }: { css: string }) {
+function CssView({ css: full, minified }: { css: string; minified: string }) {
   const [layer, setLayer] = useState("all")
   const [copied, setCopied] = useState(false)
+  // Minified, as a production build writes it, but with the readable class
+  // names: the browser engine has no dense names yet (KF-145).
+  const [small, setSmall] = useState(false)
+  const stylesheet = small ? minified : full
   const layers = useMemo(() => layersOf(stylesheet), [stylesheet])
   const shown =
     layer === "all"
@@ -151,6 +156,14 @@ function CssView({ css: stylesheet }: { css: string }) {
         <span sx={styles.size}>
           {formatBytes(sizes.raw)} · {formatBytes(sizes.gzip)} gzip
         </span>
+        <Toggle
+          size="sm"
+          pressed={small}
+          onPressedChange={setSmall}
+          title="Minified as a production build writes it, with readable class names"
+        >
+          Minified
+        </Toggle>
         <Button
           variant="ghost"
           size="sm"
@@ -266,7 +279,7 @@ export function OutputPane({
           )}
         </TabsContent>
         <TabsContent value="css" sx={styles.fill}>
-          <CssView css={output?.css ?? ""} />
+          <CssView css={output?.css ?? ""} minified={output?.minified ?? ""} />
         </TabsContent>
         <TabsContent value="compiled" sx={styles.fill}>
           <CompiledView compiled={output?.compiled ?? {}} />

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   autocompletion,
   closeBrackets,
@@ -29,11 +29,17 @@ import {
 } from "@codemirror/view"
 import { css } from "@kirana-style/core"
 
-import type { Diagnostic, Position, Summary } from "@/engine/protocol.ts"
+import type { Diagnostic, Fix, Position, Summary } from "@/engine/protocol.ts"
 import type { TypeScript } from "@/language/client.ts"
+import type { Problem } from "@/language/protocol.ts"
 
-import { kiranaSupport, setSummary } from "./kirana.ts"
-import type { KiranaHover } from "./kirana.ts"
+import {
+  kiranaCompletions,
+  kiranaSupport,
+  offsetOf as placeOffset,
+  setSummary,
+} from "./kirana.ts"
+import type { KiranaComplete, KiranaHover } from "./kirana.ts"
 import { editorTheme, highlighting } from "./theme.ts"
 import { typescriptSupport } from "./typescript.ts"
 
@@ -55,7 +61,15 @@ function offsetOf(doc: Text, position: Position): number {
   return Math.min(line.from + position.column - 1, line.to)
 }
 
-export function toLint(doc: Text, diagnostics: readonly Diagnostic[]): Lint[] {
+/**
+ * Kirana's diagnostics as lint marks, each with its quick fix when the
+ * language server has one (`fixes`, for the same text).
+ */
+export function toLint(
+  doc: Text,
+  diagnostics: readonly Diagnostic[],
+  fixes: readonly Fix[] = []
+): Lint[] {
   return diagnostics.flatMap((diagnostic) => {
     if (!diagnostic.start) return []
     const from = offsetOf(doc, diagnostic.start)
@@ -63,6 +77,12 @@ export function toLint(doc: Text, diagnostics: readonly Diagnostic[]): Lint[] {
       ? Math.max(offsetOf(doc, diagnostic.end), from)
       : from
     const help = diagnostic.help.map((line) => `\nhelp: ${line}`).join("")
+    const fix = fixes.find(
+      (candidate) =>
+        candidate.code === diagnostic.code &&
+        candidate.line === diagnostic.start!.line - 1 &&
+        candidate.character === diagnostic.start!.column - 1
+    )
     return [
       {
         from,
@@ -70,10 +90,35 @@ export function toLint(doc: Text, diagnostics: readonly Diagnostic[]): Lint[] {
         severity: diagnostic.severity,
         source: `${diagnostic.code} ${diagnostic.name}`,
         message: `${diagnostic.message}${help}`,
+        actions: fix
+          ? [
+              {
+                name: fix.title,
+                apply: (view: EditorView) =>
+                  view.dispatch({
+                    changes: fix.edits.map((change) => ({
+                      from: placeOffset(view.state.doc, change.start),
+                      to: placeOffset(view.state.doc, change.end),
+                      insert: change.text,
+                    })),
+                  }),
+              },
+            ]
+          : undefined,
       },
     ]
   })
 }
+
+/** TypeScript's errors as lint marks, beside Kirana's. */
+const problemsToLint = (problems: readonly Problem[]): Lint[] =>
+  problems.map((problem) => ({
+    from: problem.start,
+    to: problem.end,
+    severity: problem.severity,
+    source: `TypeScript ${problem.code}`,
+    message: problem.message,
+  }))
 
 type Props = {
   /** Which document this is; each keeps its own history. */
@@ -92,6 +137,8 @@ type Props = {
   summary?: Summary
   /** Kirana's hover, from the engine that compiled the file. */
   kirana?: KiranaHover
+  /** Kirana's completions, from the same engine. */
+  complete?: KiranaComplete
   /** A code lens was clicked: show the compiled CSS. */
   onShowCss?: () => void
 }
@@ -112,6 +159,7 @@ export function Editor({
   typescript,
   summary,
   kirana,
+  complete,
   onShowCss,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
@@ -124,6 +172,14 @@ export function Editor({
   hover.current = kirana
   const showCss = useRef(onShowCss)
   showCss.current = onShowCss
+  const completeRef = useRef(complete)
+  completeRef.current = complete
+  // TypeScript's errors, for the text they were found in.
+  const [problems, setProblems] = useState<{
+    file: string
+    code: string
+    list: Problem[]
+  }>()
 
   const create = (doc: string) =>
     EditorState.create({
@@ -137,7 +193,12 @@ export function Editor({
         bracketMatching(),
         closeBrackets(),
         typescript && language !== "css" && !readOnly
-          ? typescriptSupport(typescript, () => current.current)
+          ? typescriptSupport(typescript, () => current.current, [
+              kiranaCompletions({
+                file: () => current.current,
+                complete: () => completeRef.current,
+              }),
+            ])
           : autocompletion({ activateOnTyping: false }),
         highlightActiveLine(),
         highlightSelectionMatches(),
@@ -220,13 +281,36 @@ export function Editor({
     })
   }, [value])
 
+  // TypeScript checks the file once typing pauses; an editor that is read
+  // only, or shows CSS, has nothing for it to check.
+  useEffect(() => {
+    if (!typescript || readOnly || language === "css") return
+    const timer = setTimeout(() => {
+      typescript
+        .problems(file, value)
+        .then((list) => setProblems({ file, code: value, list }))
+        .catch(() => undefined)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [typescript, readOnly, language, file, value])
+
+  // Kirana's marks with their fixes, and TypeScript's, each for the text on
+  // screen.
   useEffect(() => {
     const editor = view.current
     if (!editor) return
+    const doc = editor.state.doc
+    const text = doc.toString()
+    const fixes = summary?.source === text ? summary.fixes : []
+    const typed =
+      problems?.file === file && problems.code === text ? problems.list : []
     editor.dispatch(
-      setDiagnostics(editor.state, toLint(editor.state.doc, diagnostics ?? []))
+      setDiagnostics(editor.state, [
+        ...toLint(doc, diagnostics ?? [], fixes),
+        ...problemsToLint(typed),
+      ])
     )
-  }, [diagnostics, value, file])
+  }, [diagnostics, summary, problems, value, file])
 
   // Kirana's summary, when it was computed for the text on screen. While the
   // next compile runs, the one shown follows the edits.

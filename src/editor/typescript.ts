@@ -9,12 +9,15 @@ import type {
   Completion,
   CompletionContext,
   CompletionResult,
+  CompletionSource,
 } from "@codemirror/autocomplete"
 import type { Extension } from "@codemirror/state"
 import { hoverTooltip } from "@codemirror/view"
 
 import type { TypeScript } from "@/language/client.ts"
 import type { Part } from "@/language/protocol.ts"
+
+import { markdown } from "./kirana.ts"
 
 /** TypeScript's element kinds, as CodeMirror's completion icons name them. */
 function typeOf(kind: string): string | undefined {
@@ -72,18 +75,18 @@ function card(parts: Part[], documentation: string): HTMLElement {
   const dom = document.createElement("div")
   dom.className = "cm-ts-info"
   dom.append(signature(parts))
-  if (documentation) {
-    const text = document.createElement("p")
-    text.className = "cm-ts-doc"
-    text.textContent = documentation
-    dom.append(text)
-  }
+  if (documentation)
+    dom.append(
+      markdown(documentation, { className: "cm-ts-doc", tables: false })
+    )
   return dom
 }
 
 export function typescriptSupport(
   service: TypeScript,
-  file: () => string
+  file: () => string,
+  /** Other sources whose completions share the list (Kirana's). */
+  also: CompletionSource[] = []
 ): Extension {
   async function complete(
     context: CompletionContext
@@ -120,7 +123,7 @@ export function typescriptSupport(
   }
 
   return [
-    autocompletion({ override: [complete] }),
+    autocompletion({ override: [complete, ...also] }),
     hoverTooltip(
       async (view, pos) => {
         const info = await service.hover(file(), view.state.doc.toString(), pos)

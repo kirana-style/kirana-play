@@ -10,3 +10,4 @@ dist
 *.tsbuildinfo
 coverage
 worker-configuration.d.ts
+.vitest/

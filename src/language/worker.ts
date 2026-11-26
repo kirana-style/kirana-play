@@ -22,6 +22,7 @@ import type {
   LanguageRequest,
   LanguageResponse,
   Part,
+  Problem,
 } from "./protocol.ts"
 
 /** As a project made with Kirana and React would set them. */
@@ -199,6 +200,25 @@ async function handle(request: LanguageRequest): Promise<unknown> {
             documentation: prose(details.documentation),
           } satisfies Details)
         : null
+    }
+    case "problems": {
+      const service = await at(request.file, request.code)
+      const name = path(request.file)
+      return [
+        ...service.getSyntacticDiagnostics(name),
+        ...service.getSemanticDiagnostics(name),
+      ].map((diagnostic): Problem => ({
+        start: diagnostic.start ?? 0,
+        end: (diagnostic.start ?? 0) + (diagnostic.length ?? 0),
+        message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
+        severity:
+          diagnostic.category === ts.DiagnosticCategory.Error
+            ? "error"
+            : diagnostic.category === ts.DiagnosticCategory.Warning
+              ? "warning"
+              : "info",
+        code: diagnostic.code,
+      }))
     }
     case "hover": {
       const service = await at(request.file, request.code)
