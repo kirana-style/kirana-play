@@ -16,6 +16,7 @@ import type { Files } from "@/engine/protocol.ts"
 
 import { isTypeScript } from "./protocol.ts"
 import type {
+  Completion,
   Completions,
   Details,
   Hover,
@@ -147,6 +148,45 @@ async function at(file: string, code: string) {
   return env.languageService as unknown as ts.LanguageService
 }
 
+/**
+ * The string values a property takes, offered where its value goes without a
+ * quote yet (`color: |`): TypeScript gives string literals only inside quotes,
+ * so it is asked with the word being typed quoted, and the file put back.
+ */
+async function valuesAt(
+  file: string,
+  code: string,
+  wordStart: number,
+  offset: number
+): Promise<Completion[]> {
+  const env = await start()
+  const word = code.slice(wordStart, offset)
+  env.createFile(
+    path(file),
+    `${code.slice(0, wordStart)}"${word}"${code.slice(offset)}`
+  )
+  try {
+    const service = env.languageService as unknown as ts.LanguageService
+    const info = service.getCompletionsAtPosition(
+      path(file),
+      wordStart + 1 + word.length,
+      {}
+    )
+    return (info?.entries ?? [])
+      .filter((entry) => entry.kind === ts.ScriptElementKind.string)
+      .map((entry) => ({
+        name: entry.name,
+        kind: entry.kind,
+        sortText: entry.sortText,
+        insertText: JSON.stringify(entry.name),
+        replace: { start: wordStart, end: offset },
+        quoted: true,
+      }))
+  } finally {
+    env.createFile(path(file), code)
+  }
+}
+
 const parts = (display?: ts.SymbolDisplayPart[]): Part[] =>
   (display ?? []).map(({ text, kind }) => ({ text, kind }))
 
@@ -160,28 +200,38 @@ async function handle(request: LanguageRequest): Promise<unknown> {
       return null
     case "completions": {
       const service = await at(request.file, request.code)
+      const options = {
+        includeCompletionsWithInsertText: true,
+        includeAutomaticOptionalChainCompletions: true,
+      }
       const info = service.getCompletionsAtPosition(
         path(request.file),
         request.offset,
-        {
-          includeCompletionsWithInsertText: true,
-          includeAutomaticOptionalChainCompletions: true,
-        }
+        options
       )
-      return {
-        entries: (info?.entries ?? []).map((entry) => ({
-          name: entry.name,
-          kind: entry.kind,
-          sortText: entry.sortText,
-          insertText: entry.insertText,
-          replace: entry.replacementSpan && {
-            start: entry.replacementSpan.start,
-            end: entry.replacementSpan.start + entry.replacementSpan.length,
-          },
-          source: entry.source,
-          data: entry.data,
-        })),
-      } satisfies Completions
+      const entries: Completion[] = (info?.entries ?? []).map((entry) => ({
+        name: entry.name,
+        kind: entry.kind,
+        sortText: entry.sortText,
+        insertText: entry.insertText,
+        replace: entry.replacementSpan && {
+          start: entry.replacementSpan.start,
+          end: entry.replacementSpan.start + entry.replacementSpan.length,
+        },
+        source: entry.source,
+        data: entry.data,
+        deprecated: entry.kindModifiers?.includes("deprecated"),
+      }))
+      if (request.valueStart !== undefined)
+        entries.push(
+          ...(await valuesAt(
+            request.file,
+            request.code,
+            request.valueStart,
+            request.offset
+          ))
+        )
+      return { entries } satisfies Completions
     }
     case "details": {
       const service = await at(request.file, request.code)

@@ -22,10 +22,12 @@ type Request = LanguageRequest extends infer R
 export type TypeScript = {
   /** The project's files, so imports between them resolve. */
   sync: (files: Files) => void
+  /** `valueStart`: where the word starts when the cursor is at a property's value. */
   completions: (
     file: string,
     code: string,
-    offset: number
+    offset: number,
+    valueStart?: number
   ) => Promise<Completions>
   details: (
     file: string,
@@ -87,8 +89,14 @@ export function startTypeScript(): TypeScript {
       // Before the worker exists, the files wait for its first request.
       worker?.postMessage({ id: -1, type: "sync", files })
     },
-    completions: (file, code, offset) =>
-      send<Completions>({ type: "completions", file, code, offset }),
+    completions: (file, code, offset, valueStart) =>
+      send<Completions>({
+        type: "completions",
+        file,
+        code,
+        offset,
+        valueStart,
+      }),
     details: (file, code, offset, entry) =>
       send<Details | null>({ type: "details", file, code, offset, ...entry }),
     problems: (file, code) => send<Problem[]>({ type: "problems", file, code }),
